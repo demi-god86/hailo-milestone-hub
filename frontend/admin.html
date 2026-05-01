@@ -99,6 +99,17 @@ html,body { min-height:100vh; background:#0A1628; font-family:Arial,sans-serif; 
 .ce-add-btn{padding:5px 14px;border-radius:50px;background:transparent;border:1px dashed rgba(77,163,255,0.3);color:rgba(77,163,255,0.55);font-size:11px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;transition:all 0.15s}
 .ce-add-btn:hover{border-color:#4DA3FF;color:#4DA3FF}
 .cg-empty{text-align:center;color:rgba(255,255,255,0.25);font-size:13px;padding:2rem}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(5,12,28,0.9);z-index:999;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal-box{background:#0D1F3C;border:1.5px solid rgba(77,163,255,0.3);border-radius:18px;padding:2rem;width:100%;max-width:440px;animation:popIn 0.2s ease}
+@keyframes popIn{from{opacity:0;transform:scale(0.93)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-size:18px;font-weight:900;color:#fff;margin-bottom:1.5rem}
+.modal-btns{display:flex;gap:10px;margin-top:1.5rem}
+.modal-save{flex:1;padding:12px;border-radius:50px;border:none;background:#1E6FFF;color:#fff;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:Arial,sans-serif}
+.modal-save:hover{box-shadow:0 0 20px rgba(30,111,255,0.6)}
+.modal-cancel{flex:1;padding:12px;border-radius:50px;border:1.5px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:Arial,sans-serif}
+.modal-cancel:hover{border-color:rgba(255,255,255,0.4);color:#fff}
+
 </style>
 </head>
 <body>
