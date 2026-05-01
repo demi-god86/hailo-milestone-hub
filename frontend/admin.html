@@ -166,7 +166,7 @@ html,body { min-height:100vh; background:#0A1628; font-family:Arial,sans-serif; 
 
 </div></div>
 <div id="tab-comms" class="tab-panel">
-  <div class="wrap" style="max-width:700px">
+  <div class="wrap">
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem"><span>Comms</span><button class="btn-save" style="width:auto;padding:10px 20px" onclick="openCG(null)">+ New Date</button></div>
     <div id="comms-list"><div class="loading"><div class="spinner"></div></div></div>
   </div>
@@ -377,7 +377,7 @@ function renderCG(){
         +(e.url?"<a href=\""+escH(e.url)+"\" target=\"_blank\" style=\"font-size:11px;color:#4DA3FF;text-decoration:none;white-space:nowrap;margin-right:6px\">View PDF</a>":"")
         +"<div class=\"ce-acts\">"
         +"<button class=\"btn-edit\" onclick=\"openCE('"+g.id+"','"+e.id+"')\" >Edit</button>"
-        +"<button class=\"btn-del\" onclick=\"delCE('"+g.id+"','"+e.id+"')\" >Del</button>"
+        +"<button class=\"btn-delete\" onclick=\"delCE('"+g.id+"','"+e.id+"')\" >Del</button>"
         +"</div></div>";
     }).join("");
     card.innerHTML=
@@ -385,7 +385,7 @@ function renderCG(){
       +"<div class=\"cg-info\"><div class=\"cg-date\">"+escH(ds)+"</div><div class=\"cg-type\">"+escH(g.type)+"</div></div>"
       +"<div class=\"cg-acts\">"
       +"<button class=\"btn-edit\" onclick=\"openCG('"+g.id+"')\" >Edit</button>"
-      +"<button class=\"btn-del\" onclick=\"delCG('"+g.id+"')\" >Delete</button>"
+      +"<button class=\"btn-delete\" onclick=\"delCG('"+g.id+"')\" >Delete</button>"
       +"</div></div>"
       +(en.length?"<div class=\"ce-list\">"+rows+"</div>":"")
       +"<div class=\"ce-add\"><button class=\"ce-add-btn\" onclick=\"openCE('"+g.id+"',null)\" >+ Add document</button></div>";
