@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<title>Hailo — Comms Admin</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { min-height:100vh; background:#060f1e; font-family:Arial,sans-serif; color:#fff; }
+
+.header { background:#0a1628; border-bottom:1px solid rgba(255,255,255,0.08); padding:1rem 1.5rem; display:flex; align-items:center; gap:1rem; }
+.header-logo { height:32px; width:auto; }
+.header-tag { font-size:11px; font-weight:700; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px; }
+.header-links { margin-left:auto; display:flex; gap:1rem; }
+.header-link { font-size:12px; color:rgba(255,255,255,0.4); text-decoration:none; padding:6px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); transition:all 0.15s; }
+.header-link:hover { color:#fff; border-color:rgba(255,255,255,0.3); }
+.header-link.active { color:#4DA3FF; border-color:rgba(77,163,255,0.4); background:rgba(30,111,255,0.1); }
+
+.wrap { max-width:700px; margin:0 auto; padding:2rem 1.5rem; }
+
+.section-title { font-size:11px; font-weight:700; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px; margin-bottom:1.25rem; display:flex; align-items:center; justify-content:space-between; }
+
+/* Cards */
+.cg-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; margin-bottom:12px; overflow:hidden; }
+.cg-head { display:flex; align-items:center; gap:1rem; padding:1rem 1.25rem; }
+.cg-info { flex:1; min-width:0; }
+.cg-date { font-size:15px; font-weight:700; color:#fff; }
+.cg-type { font-size:12px; color:#4DA3FF; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+.cg-acts { display:flex; gap:8px; flex-shrink:0; }
+
+.ce-list { border-top:1px solid rgba(255,255,255,0.06); padding:0.5rem 1.25rem; }
+.ce-row { display:flex; align-items:center; gap:0.75rem; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.ce-row:last-child { border-bottom:none; }
+.ce-title { flex:1; font-size:13px; color:rgba(255,255,255,0.8); }
+.ce-acts { display:flex; gap:6px; flex-shrink:0; }
+
+.ce-add { padding:0.5rem 1.25rem 0.75rem; }
+.ce-add-btn { padding:5px 14px; border-radius:50px; background:transparent; border:1px dashed rgba(77,163,255,0.3); color:rgba(77,163,255,0.55); font-size:11px; font-weight:700; cursor:pointer; font-family:Arial,sans-serif; transition:all 0.15s; }
+.ce-add-btn:hover { border-color:#4DA3FF; color:#4DA3FF; }
+
+.cg-empty { text-align:center; color:rgba(255,255,255,0.25); font-size:14px; padding:3rem; }
+
+/* Buttons */
+.btn-new { padding:9px 18px; border-radius:50px; background:#1E6FFF; border:none; color:#fff; font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; font-family:Arial,sans-serif; box-shadow:0 0 14px rgba(30,111,255,0.4); transition:box-shadow 0.15s; }
+.btn-new:hover { box-shadow:0 0 24px rgba(30,111,255,0.7); }
+.btn-edit { padding:5px 12px; border-radius:6px; border:1px solid rgba(77,163,255,0.3); background:transparent; color:rgba(77,163,255,0.6); font-size:11px; font-weight:700; cursor:pointer; font-family:Arial,sans-serif; transition:all 0.15s; }
+.btn-edit:hover { border-color:#4DA3FF; color:#4DA3FF; }
+.btn-del { padding:5px 12px; border-radius:6px; border:1px solid rgba(239,68,68,0.3); background:transparent; color:rgba(239,68,68,0.5); font-size:11px; font-weight:700; cursor:pointer; font-family:Arial,sans-serif; transition:all 0.15s; }
+.btn-del:hover { border-color:#ef4444; color:#ef4444; }
+
+/* Modal */
+.modal-overlay { position:fixed; inset:0; background:rgba(5,12,28,0.9); z-index:100; display:flex; align-items:center; justify-content:center; padding:1rem; }
+.modal-box { background:#0D1F3C; border:1.5px solid rgba(77,163,255,0.3); border-radius:18px; padding:2rem; width:100%; max-width:440px; animation:popIn 0.2s ease; }
+@keyframes popIn { from{opacity:0;transform:scale(0.93)} to{opacity:1;transform:scale(1)} }
+.modal-title { font-size:18px; font-weight:900; color:#fff; margin-bottom:1.5rem; }
+.field { margin-bottom:1rem; }
+.field-label { display:block; font-size:11px; font-weight:700; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px; }
+.field-input { width:100%; padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); color:#fff; font-size:14px; font-family:Arial,sans-serif; outline:none; transition:border-color 0.15s; }
+.field-input:focus { border-color:rgba(77,163,255,0.5); }
+.field-input::placeholder { color:rgba(255,255,255,0.25); }
+.modal-btns { display:flex; gap:10px; margin-top:1.5rem; }
+.modal-save { flex:1; padding:12px; border-radius:50px; border:none; background:#1E6FFF; color:#fff; font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; font-family:Arial,sans-serif; transition:box-shadow 0.15s; }
+.modal-save:hover { box-shadow:0 0 20px rgba(30,111,255,0.6); }
+.modal-cancel { flex:1; padding:12px; border-radius:50px; border:1.5px solid rgba(255,255,255,0.15); background:transparent; color:rgba(255,255,255,0.5); font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; font-family:Arial,sans-serif; transition:all 0.15s; }
+.modal-cancel:hover { border-color:rgba(255,255,255,0.4); color:#fff; }
+
+/* Toast */
+.toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(100px); background:#22c55e; color:#fff; padding:10px 24px; border-radius:50px; font-size:13px; font-weight:700; transition:transform 0.3s; z-index:200; pointer-events:none; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+.toast.error { background:#ef4444; }
+
+.loading { display:flex; align-items:center; justify-content:center; padding:3rem; }
+.spinner { width:28px; height:28px; border-radius:50%; border:3px solid rgba(77,163,255,0.2); border-top-color:#4DA3FF; animation:spin 0.7s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img src="/logo.png" class="header-logo" alt="HAILO"/>
+  <span class="header-tag">Comms Admin</span>
+  <div class="header-links">
+    <a href="/admin.html" class="header-link">Milestones</a>
+    <a href="/comms-admin.html" class="header-link active">Comms</a>
+    <a href="/noticeboard.html" class="header-link">View Noticeboard</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="section-title">
+    <span>Comms Groups</span>
+    <button class="btn-new" onclick="openCG(null)">+ New Date</button>
+  </div>
+  <div id="list"><div class="loading"><div class="spinner"></div></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var CF = 'https://hailo-milestone.demi-048.workers.dev/data';
+var _data = {};
+var _cgId = null, _ceId = null, _ceGId = null;
+
+async function load(){
+  try {
+    var r = await fetch(CF);
+    _data = await r.json();
+    if(!_data.commsGroups) _data.commsGroups = [];
+    render();
+  } catch(e) {
+    document.getElementById('list').innerHTML = '<div class="cg-empty">Could not load data.</div>';
+  }
+}
+
+async function save(){
+  await fetch(CF, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(_data)});
+}
+
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function showToast(msg, err){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (err?' error':'') + ' show';
+  setTimeout(function(){ t.className = 'toast' + (err?' error':''); }, 2500);
+}
+
+function render(){
+  var gs = (_data.commsGroups||[]).slice().sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+  var el = document.getElementById('list');
+  if(!gs.length){ el.innerHTML = '<div class="cg-empty">No comms yet — click "+ New Date" to get started.</div>'; return; }
+  el.innerHTML = '';
+  gs.forEach(function(g){
+    var en = g.entries||[];
+    var ds = new Date(g.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    var card = document.createElement('div');
+    card.className = 'cg-card';
+
+    var rows = en.map(function(e){
+      return '<div class="ce-row">'
+        + '<div class="ce-title">' + escH(e.title) + '</div>'
+        + (e.url ? '<a href="'+escH(e.url)+'" target="_blank" style="font-size:11px;color:#4DA3FF;text-decoration:none;white-space:nowrap;margin-right:6px">View PDF</a>' : '')
+        + '<div class="ce-acts">'
+          + '<button class="btn-edit" onclick="openCE(\''+g.id+'\',\''+e.id+'\')">Edit</button>'
+          + '<button class="btn-del" onclick="delCE(\''+g.id+'\',\''+e.id+'\')">Del</button>'
+        + '</div>'
+      + '</div>';
+    }).join('');
+
+    card.innerHTML =
+      '<div class="cg-head">'
+        + '<div class="cg-info">'
+          + '<div class="cg-date">' + escH(ds) + '</div>'
+          + '<div class="cg-type">' + escH(g.type) + '</div>'
+        + '</div>'
+        + '<div class="cg-acts">'
+          + '<button class="btn-edit" onclick="openCG(\''+g.id+'\')">Edit</button>'
+          + '<button class="btn-del" onclick="delCG(\''+g.id+'\')">Delete</button>'
+        + '</div>'
+      + '</div>'
+      + (en.length ? '<div class="ce-list">'+rows+'</div>' : '')
+      + '<div class="ce-add"><button class="ce-add-btn" onclick="openCE(\''+g.id+'\',null)">+ Add document</button></div>';
+
+    el.appendChild(card);
+  });
+}
+
+/* ── Group modal ── */
+function openCG(id){
+  _cgId = id;
+  var g = id ? (_data.commsGroups||[]).find(function(x){ return x.id===id; }) : null;
+  var m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.id = 'modal';
+  m.innerHTML =
+    '<div class="modal-box">'
+      + '<div class="modal-title">' + (g?'Edit':'New') + ' Comms Date</div>'
+      + '<div class="field"><label class="field-label">Date</label>'
+        + '<input type="date" id="cgd" class="field-input" value="'+(g?g.date:new Date().toISOString().slice(0,10))+'"></div>'
+      + '<div class="field"><label class="field-label">Comms Type</label>'
+        + '<input type="text" id="cgt" class="field-input" placeholder="e.g. Regular Update" value="'+escH(g?g.type:'')+'"></div>'
+      + '<div class="modal-btns">'
+        + '<button class="modal-cancel" onclick="closeModal()">Cancel</button>'
+        + '<button class="modal-save" onclick="saveCG()">Save</button>'
+      + '</div>'
+    + '</div>';
+  m.addEventListener('click', function(e){ if(e.target===m) closeModal(); });
+  document.body.appendChild(m);
+}
+
+function closeModal(){ var m=document.getElementById('modal'); if(m) m.remove(); }
+
+async function saveCG(){
+  var d = document.getElementById('cgd').value;
+  var t = document.getElementById('cgt').value.trim();
+  if(!d||!t){ alert('Fill in both fields.'); return; }
+  if(!_data.commsGroups) _data.commsGroups = [];
+  if(_cgId){
+    var g = _data.commsGroups.find(function(x){ return x.id===_cgId; });
+    if(g){ g.date=d; g.type=t; }
+  } else {
+    _data.commsGroups.push({id:'cg-'+Date.now(), date:d, type:t, entries:[]});
+  }
+  await save(); closeModal(); render(); showToast('Saved!');
+}
+
+async function delCG(id){
+  if(!confirm('Delete this date and all its documents?')) return;
+  _data.commsGroups = (_data.commsGroups||[]).filter(function(g){ return g.id!==id; });
+  await save(); render(); showToast('Deleted');
+}
+
+/* ── Entry modal ── */
+function openCE(gId, eId){
+  _ceGId = gId; _ceId = eId;
+  var g = (_data.commsGroups||[]).find(function(x){ return x.id===gId; });
+  var e = eId&&g ? (g.entries||[]).find(function(x){ return x.id===eId; }) : null;
+  var m = document.createElement('div');
+  m.className = 'modal-overlay';
+  m.id = 'modal';
+  m.innerHTML =
+    '<div class="modal-box">'
+      + '<div class="modal-title">' + (e?'Edit':'Add') + ' Document</div>'
+      + '<div class="field"><label class="field-label">Title</label>'
+        + '<input type="text" id="cet" class="field-input" placeholder="e.g. Live Customers" value="'+escH(e?e.title:'')+'"></div>'
+      + '<div class="field"><label class="field-label">Google Drive Link</label>'
+        + '<input type="url" id="ceu" class="field-input" placeholder="https://drive.google.com/..." value="'+escH(e&&e.url?e.url:'')+'"></div>'
+      + '<div class="modal-btns">'
+        + '<button class="modal-cancel" onclick="closeModal()">Cancel</button>'
+        + '<button class="modal-save" onclick="saveCE()">Save</button>'
+      + '</div>'
+    + '</div>';
+  m.addEventListener('click', function(e){ if(e.target===m) closeModal(); });
+  document.body.appendChild(m);
+}
+
+async function saveCE(){
+  var t = document.getElementById('cet').value.trim();
+  var u = document.getElementById('ceu').value.trim();
+  if(!t){ alert('Add a title.'); return; }
+  var g = (_data.commsGroups||[]).find(function(x){ return x.id===_ceGId; });
+  if(!g) return;
+  if(!g.entries) g.entries = [];
+  if(_ceId){
+    var e = g.entries.find(function(x){ return x.id===_ceId; });
+    if(e){ e.title=t; e.url=u; }
+  } else {
+    g.entries.push({id:'ce-'+Date.now(), title:t, url:u});
+  }
+  await save(); closeModal(); render(); showToast('Saved!');
+}
+
+async function delCE(gId, eId){
+  if(!confirm('Delete this document?')) return;
+  var g = (_data.commsGroups||[]).find(function(x){ return x.id===gId; });
+  if(g) g.entries = (g.entries||[]).filter(function(e){ return e.id!==eId; });
+  await save(); render(); showToast('Deleted');
+}
+
+load();
+</script>
+</body>
+</html>
