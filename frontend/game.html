@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hailo Milestone</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { width:100%; min-height:100vh; background:#0A1628; display:flex; align-items:center; justify-content:center; }
+#app { min-height:100vh; width:100%; max-width:560px; background:#0D1F3C; font-family:Arial,sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; position:relative; overflow:hidden; }
+.glow { position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(30,111,255,0.3) 0%,transparent 70%); top:20%; left:50%; transform:translate(-50%,-50%); pointer-events:none; }
+.screen { width:100%; max-width:440px; display:none; flex-direction:column; align-items:center; gap:1.2rem; position:relative; z-index:2; }
+.screen.active { display:flex; }
+.back-btn { align-self:flex-start; display:flex; align-items:center; gap:6px; font-size:13px; color:rgba(255,255,255,0.4); text-decoration:none; cursor:pointer; background:none; border:none; font-family:Arial,sans-serif; transition:color 0.15s; padding:0; margin-bottom:0.25rem; }
+.back-btn:hover { color:rgba(255,255,255,0.8); }
+.back-btn::before { content:"\2190"; font-size:16px; }
+.logo-ph { height:44px; display:inline-block; }
+.logo-ph img { height:44px; width:auto; display:block; }
+.bar { width:50px; height:3px; background:#1E6FFF; border-radius:2px; }
+.heading { font-size:20px; font-weight:700; color:#fff; text-align:center; line-height:1.4; }
+.field-label { font-size:12px; font-weight:700; color:rgba(255,255,255,0.7); text-transform:uppercase; letter-spacing:2px; align-self:flex-start; }
+.name-input { width:100%; padding:14px 20px; border-radius:50px; background:rgba(255,255,255,0.1); border:1.5px solid rgba(255,255,255,0.2); color:#fff; font-size:15px; font-family:inherit; outline:none; text-align:center; transition:border-color 0.15s; }
+.name-input::placeholder { color:rgba(255,255,255,0.35); }
+.name-input:focus { border-color:#4DA3FF; }
+.hint { font-size:11px; color:rgba(255,255,255,0.4); text-align:center; }
+.size-row { display:flex; gap:10px; justify-content:center; }
+.size-btn { padding:10px 26px; border-radius:50px; cursor:pointer; font-size:14px; font-weight:700; font-family:inherit; border:none; background:#1E6FFF; color:#fff !important; box-shadow:0 0 14px rgba(30,111,255,0.45); transition:box-shadow 0.15s,transform 0.1s; -webkit-appearance:none; }
+.size-btn:hover { box-shadow:0 0 26px rgba(30,111,255,0.85); transform:scale(1.05); }
+.size-btn.sel { outline:2.5px solid #fff; outline-offset:2px; }
+.btn-go { width:100%; padding:15px; border-radius:50px; border:none; background:#1E6FFF; color:#fff !important; font-size:16px; font-weight:900; font-family:inherit; letter-spacing:2px; text-transform:uppercase; cursor:pointer; box-shadow:0 0 22px rgba(30,111,255,0.55); transition:box-shadow 0.15s,transform 0.1s; -webkit-appearance:none; }
+.btn-go:hover { box-shadow:0 0 38px rgba(30,111,255,0.9); }
+.btn-go:active { transform:scale(0.98); }
+.btn-go:disabled { background:rgba(255,255,255,0.1) !important; box-shadow:none; cursor:not-allowed; color:rgba(255,255,255,0.3) !important; }
+.btn-lb { width:100%; padding:13px; border-radius:50px; border:1.5px solid rgba(77,163,255,0.45); background:transparent; color:#4DA3FF !important; font-size:14px; font-weight:700; font-family:inherit; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:border-color 0.15s,background 0.15s; -webkit-appearance:none; }
+.btn-lb:hover { border-color:#4DA3FF; background:rgba(77,163,255,0.08); }
+.stats-row { display:flex; gap:3rem; }
+.stat { text-align:center; }
+.stat-n { font-size:32px; font-weight:900; color:#fff; line-height:1; font-variant-numeric:tabular-nums; }
+.stat-n.blue { color:#4DA3FF; }
+.stat-l { font-size:10px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:1.5px; margin-top:2px; }
+
+/* Sliding puzzle */
+#grid { display:grid; gap:3px; padding:3px; background:rgba(255,255,255,0.07); border:2px solid rgba(77,163,255,0.35); border-radius:10px; }
+.tile { cursor:pointer; border-radius:4px; overflow:hidden; transition:box-shadow 0.08s; }
+.tile:hover { box-shadow:0 0 0 2.5px #4DA3FF; z-index:1; }
+.tile.empty { background:#050d1a; cursor:default; border:2px dashed rgba(77,163,255,0.5); box-shadow:none !important; }
+.tile.empty:hover { box-shadow:none !important; }
+
+/* Arkanoid */
+#ark-stats { display:flex; gap:2rem; }
+#ark-lives { display:flex; gap:6px; }
+.ark-heart { width:12px; height:12px; background:#1E6FFF; border-radius:50%; transition:opacity .3s; box-shadow:0 0 6px rgba(30,111,255,0.6); }
+.ark-heart.dead { opacity:.15; box-shadow:none; }
+.ark-heart-emoji { font-size:18px; transition:all 0.3s; line-height:1; }
+.ark-heart-emoji.dead { opacity:0.15; filter:grayscale(1); }
+canvas#ark-cv { border:2px solid rgba(77,163,255,0.35); border-radius:8px; display:block; cursor:none; }
+.ark-legend { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+.ark-li { display:flex; align-items:center; gap:4px; font-size:10px; color:rgba(255,255,255,0.4); }
+.ark-ld { width:10px; height:10px; border-radius:2px; }
+
+/* Runner */
+#run-canvas { display:block; cursor:pointer; }
+#run-tap-l,#run-tap-r { position:absolute; top:0; bottom:0; width:50%; z-index:10; -webkit-tap-highlight-color:transparent; }
+#run-tap-l { left:0; }
+#run-tap-r { right:0; }
+.run-dead-overlay { position:absolute; inset:0; z-index:20; background:rgba(5,12,28,0.96); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:1.5rem; text-align:center; border-radius:8px; }
+.run-dead-overlay.hidden { display:none; }
+.confetti-p { position:fixed; width:8px; height:4px; border-radius:2px; pointer-events:none; animation:cf 3.5s ease-in forwards; z-index:100; }
+@keyframes cf { 0%{transform:translateY(0) rotate(0deg);opacity:1;} 100%{transform:translateY(600px) rotate(720deg);opacity:0;} }
+
+/* Shared reveal */
+.reveal-banner { width:100%; background:rgba(30,111,255,0.15); border:1.5px solid rgba(77,163,255,0.45); border-radius:14px; padding:1.8rem 1.5rem; text-align:center; }
+.rev-eye { font-size:11px; color:#4DA3FF; text-transform:uppercase; letter-spacing:3px; margin-bottom:10px; }
+.rev-num { font-size:64px; font-weight:900; color:#fff; line-height:1; }
+.rev-lbl { font-size:15px; font-weight:700; color:#4DA3FF; text-transform:uppercase; letter-spacing:3px; margin-top:6px; }
+.rev-time { font-size:13px; color:rgba(255,255,255,0.5); margin-top:12px; }
+.rev-time strong { color:#fff; }
+.lb-wrap { width:100%; }
+.lb-head { font-size:10px; font-weight:700; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2.5px; margin-bottom:8px; text-align:center; }
+.lb-row { display:flex; align-items:center; gap:10px; padding:9px 12px; margin-bottom:3px; background:rgba(255,255,255,0.04); border-radius:7px; border:1px solid rgba(255,255,255,0.07); }
+.lb-row.me { background:rgba(30,111,255,0.2); border-color:rgba(77,163,255,0.45); }
+.lb-pos { font-size:12px; font-weight:900; color:rgba(255,255,255,0.2); width:20px; text-align:center; }
+.lb-pos.g { color:#FFD700; } .lb-pos.s { color:#C0C0C0; } .lb-pos.bz { color:#CD7F32; }
+.lb-name { flex:1; font-size:13px; font-weight:700; color:#fff; }
+.lb-t { font-size:12px; color:rgba(255,255,255,0.5); font-variant-numeric:tabular-nums; }
+.lb-mv { font-size:11px; color:rgba(255,255,255,0.28); min-width:32px; text-align:right; }
+.lb-loading { display:flex; flex-direction:column; align-items:center; gap:10px; padding:20px 0; }
+.spinner { width:28px; height:28px; border-radius:50%; border:3px solid rgba(77,163,255,0.2); border-top-color:#4DA3FF; animation:spin 0.7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes lockpulse { 0%,100% { box-shadow:0 0 0 0 rgba(30,111,255,0.5); } 50% { box-shadow:0 0 0 10px rgba(30,111,255,0); } }
+@keyframes dotblink { 0%,100%{opacity:0.3} 50%{opacity:1} }
+.lock-loader { display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 0; }
+.lock-loader-icon { width:40px; height:40px; border-radius:50%; background:rgba(30,111,255,0.15); border:1px solid rgba(77,163,255,0.3); display:flex; align-items:center; justify-content:center; font-size:18px; animation:lockpulse 2s ease-in-out infinite; }
+.lock-loader-text { font-size:12px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:1.5px; }
+.lock-loader-dots span { animation:dotblink 1.4s ease-in-out infinite; }
+.lock-loader-dots span:nth-child(2) { animation-delay:0.2s; }
+.lock-loader-dots span:nth-child(3) { animation-delay:0.4s; }
+.lb-loading-text { font-size:12px; color:rgba(255,255,255,0.35); letter-spacing:1px; text-transform:uppercase; }
+.lb-empty { font-size:13px; color:rgba(255,255,255,0.3); text-align:center; padding:16px 0; }
+.btn-row { display:flex; gap:10px; width:100%; }
+.btn-sec { flex:1; padding:14px; border-radius:50px; border:1.5px solid rgba(255,255,255,0.25); background:transparent; color:#fff !important; font-size:14px; font-weight:700; font-family:inherit; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:border-color 0.15s,background 0.15s; -webkit-appearance:none; }
+.btn-sec:hover { border-color:rgba(255,255,255,0.6); background:rgba(255,255,255,0.07); }
+.teaser { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:14px 20px; text-align:center; width:100%; }
+.teaser-lock { font-size:28px; margin-bottom:4px; }
+.teaser-text { font-size:13px; color:rgba(255,255,255,0.5); }
+.category-tag { font-size:12px; color:#4DA3FF; font-weight:700; text-transform:uppercase; letter-spacing:2px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="glow"></div>
+
+  <!-- LANDING -->
+  <div id="s-land" class="screen active">
+    <a class="back-btn" href="index.html">Back to Hub</a>
+    <div class="logo-ph" id="logo1"></div>
+    <div class="bar"></div>
+    <div id="land-category-wrap">
+      <div id="land-loading" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0;">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(30,111,255,0.15);border:1px solid rgba(77,163,255,0.3);display:flex;align-items:center;justify-content:center;font-size:16px;animation:lockpulse 2s ease-in-out infinite;">🔒</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;">Unlocking<span style="animation:dotblink 1.4s ease-in-out infinite;">.</span><span style="animation:dotblink 1.4s ease-in-out infinite;animation-delay:0.2s;">.</span><span style="animation:dotblink 1.4s ease-in-out infinite;animation-delay:0.4s;">.</span></div>
+      </div>
+      <div class="category-tag" id="land-category" style="display:none;"></div>
+    </div>
+    <div class="heading">Something big just happened at Homesearch.</div>
+    <div class="teaser">
+      <div class="teaser-lock">🔒</div>
+      <div class="teaser-text">A milestone is hidden inside this puzzle.<br>Solve it to find out what we just achieved.</div>
+    </div>
+    <div style="width:100%">
+      <div class="field-label" style="margin-bottom:8px">Your name</div>
+      <input class="name-input" id="pname" type="text" placeholder="Type your name here..." maxlength="30" autocomplete="off"/>
+    </div>
+    <!-- Sliding size picker — hidden for arkanoid -->
+    <div style="width:100%;display:none" id="size-picker">
+      <div class="hint" style="margin-bottom:8px">Choose your challenge</div>
+      <div class="size-row">
+        <button class="size-btn sel" id="b3" onclick="setSize(3)">3x3 Quick</button>
+        <button class="size-btn" id="b4" onclick="setSize(4)">4x4 Hard</button>
+      </div>
+    </div>
+    <button class="btn-go" id="bgo" onclick="startGame()" disabled>Solve the Puzzle</button>
+    <button class="btn-lb" onclick="showLeaderboard()">See Leaderboard</button>
+    <div class="hint">Fastest time wins — leaderboard shared with the whole team</div>
+  </div>
+
+  <!-- SLIDING PUZZLE SCREEN -->
+  <div id="s-play" class="screen">
+    <div class="logo-ph" id="logo2"></div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-n" id="t-time">0:00</div><div class="stat-l">Time</div></div>
+      <div class="stat"><div class="stat-n blue" id="t-moves">0</div><div class="stat-l">Moves</div></div>
+    </div>
+    <div id="grid"></div>
+    <div class="btn-row">
+      <button class="btn-sec" onclick="resetPuzzle()">Reset</button>
+      <button class="btn-sec" onclick="goHome()">Quit</button>
+    </div>
+    <div class="hint">Tap a tile next to the gap to slide it</div>
+  </div>
+
+
+
+  <!-- ARKANOID SCREEN -->
+  <div id="s-ark" class="screen">
+    <div class="logo-ph" id="logo3"></div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-n" id="ark-time">0:00</div><div class="stat-l">Time</div></div>
+      <div class="stat"><div class="stat-n blue" id="ark-lives-count">3</div><div class="stat-l">Lives</div></div>
+    </div>
+    <div id="ark-lives" style="display:flex;gap:6px;align-items:center;">
+      <div class="ark-heart-emoji" id="ah0">&#10084;&#65039;</div>
+      <div class="ark-heart-emoji" id="ah1">&#10084;&#65039;</div>
+      <div class="ark-heart-emoji" id="ah2">&#10084;&#65039;</div>
+    </div>
+    <div style="position:relative;width:420px;">
+      <canvas id="ark-cv" width="420" height="300"></canvas>
+      <!-- Game over overlay — shown as HTML on top of canvas -->
+      <div id="ark-dead-overlay" style="display:none;position:absolute;inset:0;background:rgba(8,18,36,0.93);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:2rem;">
+        <div style="width:52px;height:52px;border-radius:50%;background:rgba(30,111,255,0.15);border:1px solid rgba(77,163,255,0.3);display:flex;align-items:center;justify-content:center;font-size:24px;animation:lockpulse 2s ease-in-out infinite;">🔒</div>
+        <div style="font-size:22px;font-weight:900;color:#fff;font-family:'Arial Black',Arial;text-align:center;">Better luck next time!</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.45);text-align:center;">The milestone stays locked for now.</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.35);" id="ark-dead-stats"></div>
+        <button onclick="arkRestart()" style="width:100%;max-width:200px;padding:14px;border-radius:50px;border:none;background:#1E6FFF;color:#fff;font-size:15px;font-weight:900;font-family:Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;cursor:pointer;box-shadow:0 0 22px rgba(30,111,255,0.55);">RESTART</button>
+        <button onclick="arkStop();window.location.href='index.html'" style="width:100%;max-width:200px;padding:11px;border-radius:50px;border:1.5px solid rgba(255,255,255,0.2);background:transparent;color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;font-family:Arial,sans-serif;cursor:pointer;">Back to Hub</button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-sec" onclick="arkQuit()">Quit</button>
+    </div>
+    <div class="ark-legend">
+      <div class="ark-li"><div class="ark-ld" style="background:#22c55e"></div>Multi-ball</div>
+      <div class="ark-li"><div class="ark-ld" style="background:#a855f7"></div>Wide paddle</div>
+      <div class="ark-li"><div class="ark-ld" style="background:#ef4444"></div>Speed up</div>
+      <div class="ark-li"><div class="ark-ld" style="background:#f97316"></div>Narrow paddle</div>
+    </div>
+    <div class="hint"><b style="color:#4DA3FF">Move mouse</b> to control &nbsp;·&nbsp; <b style="color:#4DA3FF">Click</b> or <b style="color:#4DA3FF">Space</b> to launch</div>
+  </div>
+
+  <!-- RUNNER SCREEN -->
+  <div id="s-run" class="screen">
+    <div class="logo-ph" id="logo-run"></div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-n" id="run-time">40</div><div class="stat-l">Time</div></div>
+      <div class="stat"><div class="stat-n blue" id="run-score">0</div><div class="stat-l">Score</div></div>
+      <div class="stat"><div class="stat-n" style="color:#fbbf24" id="run-demi">0</div><div class="stat-l">Demi</div></div>
+    </div>
+    <div class="lives"><div class="ark-heart" id="rh0"></div><div class="ark-heart" id="rh1"></div><div class="ark-heart" id="rh2"></div></div>
+    <div style="position:relative;width:420px;">
+      <canvas id="run-canvas" width="420" height="340"></canvas>
+      <div id="run-tap-l"></div>
+      <div id="run-tap-r"></div>
+      <div id="run-dead-overlay" class="run-dead-overlay hidden">
+        <div style="width:44px;height:44px;border-radius:50%;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);display:flex;align-items:center;justify-content:center;font-size:20px;animation:lockpulse 2s ease-in-out infinite;">🔒</div>
+        <div style="font-size:20px;font-weight:900;color:#ef4444;font-family:'Arial Black',Arial;">LISTING PULLED BACK</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.7;" id="run-dead-stats"></div>
+        <button onclick="runRestart()" style="width:100%;max-width:200px;padding:13px;border-radius:50px;border:none;background:#1E6FFF;color:#fff;font-size:14px;font-weight:900;font-family:Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;cursor:pointer;box-shadow:0 0 20px rgba(30,111,255,0.5);">TRY AGAIN</button>
+        <button onclick="runQuit()" style="width:100%;max-width:200px;padding:11px;border-radius:50px;border:1.5px solid rgba(255,255,255,0.2);background:transparent;color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;font-family:Arial,sans-serif;cursor:pointer;">Back to Hub</button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-sec" onclick="runQuit()">Quit</button>
+    </div>
+    <div class="hint"><b style="color:#4DA3FF">&#8592; &#8594;</b> arrow keys or tap left/right to dodge</div>
+  </div>
+
+  <!-- CROSSY LISTING SCREEN -->
+  <div id="s-cross" class="screen">
+    <div class="logo-ph" id="logo-cross"></div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-n" id="cross-time">60</div><div class="stat-l">Time</div></div>
+      <div class="stat"><div class="stat-n" id="cross-lv" style="color:#4DA3FF">1/3</div><div class="stat-l">Level</div></div>
+    </div>
+    <div class="lives">
+      <div class="ark-heart-emoji" id="crh0">&#10084;&#65039;</div>
+      <div class="ark-heart-emoji" id="crh1">&#10084;&#65039;</div>
+      <div class="ark-heart-emoji" id="crh2">&#10084;&#65039;</div>
+    </div>
+    <div style="position:relative;width:420px;">
+      <canvas id="cross-cv" width="420" height="420"></canvas>
+      <div id="cross-tap-up"    style="position:absolute;top:0;left:0;right:0;height:40%;z-index:10;-webkit-tap-highlight-color:transparent;"></div>
+      <div id="cross-tap-left"  style="position:absolute;top:40%;left:0;width:35%;bottom:0;z-index:10;-webkit-tap-highlight-color:transparent;"></div>
+      <div id="cross-tap-right" style="position:absolute;top:40%;right:0;width:35%;bottom:0;z-index:10;-webkit-tap-highlight-color:transparent;"></div>
+      <div id="cross-level-badge" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:5;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;padding:3px 12px;border-radius:50px;pointer-events:none;"></div>
+      <div id="cross-dead-overlay" style="display:none;position:absolute;inset:0;background:rgba(5,12,28,0.96);z-index:20;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:1.5rem;text-align:center;border-radius:8px;">
+        <div style="font-size:20px;font-weight:900;color:#ef4444;font-family:'Arial Black',Arial;" id="cross-dead-title">BLOCKED!</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.7;" id="cross-dead-sub"></div>
+        <button onclick="crossRestart()" style="width:100%;max-width:200px;padding:13px;border-radius:50px;border:none;background:#ef4444;color:#fff;font-size:14px;font-weight:900;font-family:Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">TRY AGAIN</button>
+        <button onclick="crossStartOver()" style="width:100%;max-width:200px;padding:11px;border-radius:50px;border:1.5px solid rgba(255,255,255,0.2);background:transparent;color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;font-family:Arial,sans-serif;cursor:pointer;">Start Over</button>
+        <button onclick="crossQuit()" style="width:100%;max-width:200px;padding:11px;border-radius:50px;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.4);font-size:12px;font-family:Arial,sans-serif;cursor:pointer;">Back to Hub</button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-sec" onclick="crossQuit()">Quit</button>
+    </div>
+    <div class="hint"><b style="color:#4DA3FF">&#8593;</b> hop forward &nbsp;·&nbsp; <b style="color:#4DA3FF">&#8592; &#8594;</b> dodge left/right</div>
+  </div>
+
+  <!-- LEADERBOARD SCREEN -->
+  <div id="s-lb" class="screen">
+    <a class="back-btn" href="index.html">Back to Hub</a>
+    <div class="logo-ph" id="logo4"></div>
+    <div class="bar"></div>
+    <div style="text-align:center;width:100%">
+      <div style="font-size:11px;color:#4DA3FF;text-transform:uppercase;letter-spacing:3px;margin-bottom:4px">Current standings</div>
+      <div style="font-size:18px;font-weight:700;color:#fff" id="lb-title">Leaderboard</div>
+    </div>
+    <div id="lb-size-picker" style="display:flex;gap:8px;width:100%;justify-content:center">
+      <button class="size-btn sel" id="lb-b3" onclick="switchLbSize(3)">3x3 Quick</button>
+      <button class="size-btn" id="lb-b4" onclick="switchLbSize(4)">4x4 Hard</button>
+    </div>
+    <div class="lb-wrap"><div id="lb-standalone-rows"></div></div>
+    <div class="btn-row"><button class="btn-go" onclick="show('s-land')">Play Now</button></div>
+  </div>
+
+  <!-- REVEAL / DONE SCREEN -->
+  <div id="s-done" class="screen">
+    <div class="logo-ph" id="logo5"></div>
+    <div class="bar"></div>
+    <div class="reveal-banner">
+      <div class="rev-eye">We just hit</div>
+      <div class="rev-num" id="r-num">—</div>
+      <div class="rev-lbl" id="r-lbl">—</div>
+      <div class="rev-time" id="rev-result"></div>
+    </div>
+    <div class="lb-wrap">
+      <div class="lb-head">Leaderboard</div>
+      <div id="lb-rows"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-go" onclick="goHome()">Play Again</button>
+      <button class="btn-sec" onclick="window.location.href='index.html'">Hub</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+var CF_URL='https://hailo-milestone.demi-048.workers.dev/data';
+var _cache=null;
+function preload(){
+  if(_cache)return Promise.resolve(_cache);
+  return fetch(CF_URL)
+    .then(function(r){return r.json();})
+    .then(function(j){_cache=j;return _cache;})
+    .catch(function(){return{milestones:[],scores:{}};});
+}
+async function binGet(){return preload();}
+async function binSet(data){
+  _cache=data;
+  await fetch(CF_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+}
+preload();
+
+// ── Milestone config ─────────────────────────────────────────────────────────
+var params=new URLSearchParams(window.location.search);
+var MILESTONE_ID=params.get('id')||'';
+var GAME_TYPE='sliding';
+var MILESTONE_N='',MILESTONE_LBL='',MILESTONE_CAT='';
+
+var milestoneReady=false;
+
+async function loadMilestone(){
+  var data=await binGet();
+  var ms=(data.milestones||[]).find(function(m){return m.id===MILESTONE_ID;});
+  if(ms){
+    MILESTONE_N=ms.number||'';
+    MILESTONE_LBL=ms.label||'';
+    MILESTONE_CAT=ms.category||'';
+    GAME_TYPE=ms.game||'sliding';
+    document.getElementById('land-loading').style.display='none';
+    document.getElementById('land-category').style.display='block';
+    document.getElementById('land-category').textContent=MILESTONE_CAT;
+    document.getElementById('r-num').textContent=MILESTONE_N;
+    document.getElementById('r-lbl').textContent=MILESTONE_LBL;
+    document.getElementById('lb-title').textContent=MILESTONE_CAT;
+    if(GAME_TYPE==='arkanoid'||GAME_TYPE==='runner'||GAME_TYPE==='crossy'){
+      document.getElementById('size-picker').style.display='none';
+      document.getElementById('lb-size-picker').style.display='none';
+      document.getElementById('bgo').textContent='Play the Game';
+    } else {
+      document.getElementById('size-picker').style.display='block';
+      document.getElementById('lb-size-picker').style.display='flex';
+      document.getElementById('bgo').textContent='Solve the Puzzle';
+    }
+  } else {
+    // ID not matched — still allow play, just won't have milestone text
+    document.getElementById('land-loading').style.display='none';
+    document.getElementById('land-category').style.display='block';
+    document.getElementById('land-category').textContent='Milestone';
+  }
+  milestoneReady=true;
+  // Re-enable start button if name already entered
+  var nameEl=document.getElementById('pname');
+  var goEl=document.getElementById('bgo');
+  if(nameEl&&goEl&&nameEl.value.trim().length>=2) goEl.disabled=false;
+}
+
+// Disable button until milestone loads
+document.getElementById('bgo').disabled=true;
+// Safety fallback — unblock after 6s regardless
+setTimeout(function(){
+  if(!milestoneReady){
+    milestoneReady=true;
+    var goEl=document.getElementById('bgo');
+    var nameEl=document.getElementById('pname');
+    if(goEl&&nameEl&&nameEl.value.trim().length>=2) goEl.disabled=false;
+  }
+}, 6000);
+loadMilestone();
+
+// Inject logo into all placeholder divs
+(function(){
+  var src='/logo.png';
+  ['logo1','logo2','logo3','logo4','logo5'].forEach(function(id){
+    var el=document.getElementById(id);if(!el)return;
+    var img=document.createElement('img');img.src=src;img.alt='HAILO';img.style.height='44px';img.style.width='auto';img.style.display='block';
+    el.appendChild(img);
+  });
+})();
+
+var SK='hailo_'+encodeURIComponent(MILESTONE_ID);
+function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');}
+function fmt(ms){var s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+var pname='',gSize=3,t0=0,ticker=null,elapsedTime=0;
+var inp=document.getElementById('pname');
+var bgo=document.getElementById('bgo');
+document.getElementById('pname').addEventListener('input',function(){
+  document.getElementById('bgo').disabled=this.value.trim().length<2||!milestoneReady;
+});
+function setSize(n){gSize=n;document.getElementById('b3').className='size-btn'+(n===3?' sel':'');document.getElementById('b4').className='size-btn'+(n===4?' sel':'');}
+function startTimer(){t0=Date.now();clearInterval(ticker);ticker=setInterval(function(){document.getElementById('t-time').textContent=fmt(Date.now()-t0);},500);}
+
+function startGame(){
+  pname=inp.value.trim();if(pname.length<2)return;
+  if(!milestoneReady)return;
+  elapsedTime=0;
+  if(GAME_TYPE==='arkanoid'){startArkanoid();}
+  else if(GAME_TYPE==='runner'){startRunner();}
+  else if(GAME_TYPE==='crossy'){startCrossy();}
+  else{startSliding();}
+}
+
+function goHome(){
+  // Stop everything
+  clearInterval(ticker);
+  arkStop();
+  // Reset all state
+  document.getElementById('pname').value='';
+  document.getElementById('bgo').disabled=true;
+  // Hide any arkanoid overlays
+  var overlay=document.getElementById('ark-dead-overlay');
+  if(overlay)overlay.style.display='none';
+  // Go back to landing screen
+  show('s-land');
+}
+
+// ── Leaderboard helpers ───────────────────────────────────────────────────────
+function scoreKey(size){
+  if(GAME_TYPE==='arkanoid')return'scores_'+MILESTONE_ID+'_ark';
+  if(GAME_TYPE==='runner')return'scores_'+MILESTONE_ID+'_run';
+  if(GAME_TYPE==='crossy')return'scores_'+MILESTONE_ID+'_cross';
+  return'scores_'+MILESTONE_ID+'_'+size;
+}
+async function saveScore(elapsed,moves,size,lives,demi){
+  var data=await binGet();
+  if(!data.scores)data.scores={};
+  var key=scoreKey(size);
+  var arr=data.scores[key]||[];
+  var entry={name:pname,ms:elapsed,moves:moves};
+  if(lives!==undefined)entry.lives=lives;
+  if(demi!==undefined)entry.demi=demi;
+  arr.push(entry);
+  arr.sort(function(a,b){return a.ms-b.ms;});
+  data.scores[key]=arr.slice(0,20);
+  await binSet(data);
+}
+async function loadBoard(size,me){
+  var wrap=document.getElementById('lb-rows');
+  wrap.innerHTML='<div class="lock-loader"><div class="lock-loader-icon">🔒</div><div class="lock-loader-text">Updating<span style="animation:dotblink 1.4s infinite">.</span><span style="animation:dotblink 1.4s infinite;animation-delay:.2s">.</span><span style="animation:dotblink 1.4s infinite;animation-delay:.4s">.</span></div></div>';
+  try{
+    var data=await binGet();
+    var scores=(data.scores||{})[scoreKey(size)]||[];
+    wrap.innerHTML='';
+    if(!scores.length){wrap.innerHTML='<div class="lb-empty">You\'re the first!</div>';return;}
+    var medals=['g','s','bz'];
+    scores.slice(0,10).forEach(function(s,i){
+      var r=document.createElement('div');r.className='lb-row'+(s.name===me?' me':'');
+      var extra;
+      if(s.demi!==undefined)extra=s.lives+' lives · '+s.demi+' demi';
+      else if(s.lives!==undefined)extra=s.lives+' lives';
+      else extra=s.moves+'mv';
+      r.innerHTML='<div class="lb-pos '+(medals[i]||'')+'">'+( i+1)+'</div><div class="lb-name">'+s.name+'</div><div class="lb-t">'+fmt(s.ms)+'</div><div class="lb-mv">'+extra+'</div>';
+      wrap.appendChild(r);
+    });
+  }catch(e){}
+}
+async function showLeaderboard(){
+  if(GAME_TYPE==='arkanoid'){await renderStandaloneBoard('ark');}
+  else if(GAME_TYPE==='runner'){await renderStandaloneBoard('run');}
+  else if(GAME_TYPE==='crossy'){await renderStandaloneBoard('cross');}
+  else{await renderStandaloneBoard(3);}
+  show('s-lb');
+}
+var lbSz=3;
+async function switchLbSize(n){
+  lbSz=n;
+  document.getElementById('lb-b3').className='size-btn'+(n===3?' sel':'');
+  document.getElementById('lb-b4').className='size-btn'+(n===4?' sel':'');
+  await renderStandaloneBoard(n);
+}
+async function renderStandaloneBoard(size){
+  var wrap=document.getElementById('lb-standalone-rows');
+  wrap.innerHTML='<div class="lock-loader"><div class="lock-loader-icon">🔒</div><div class="lock-loader-text">Loading scores<span style="animation:dotblink 1.4s infinite">.</span><span style="animation:dotblink 1.4s infinite;animation-delay:.2s">.</span><span style="animation:dotblink 1.4s infinite;animation-delay:.4s">.</span></div></div>';
+  try{
+    var data=await binGet();
+    var key='scores_'+MILESTONE_ID+'_'+(size==='ark'?'ark':size);
+    var scores=(data.scores||{})[key]||[];
+    wrap.innerHTML='';
+    if(!scores.length){wrap.innerHTML='<div class="lb-empty">No scores yet — be the first!</div>';return;}
+    var medals=['g','s','bz'];
+    scores.slice(0,10).forEach(function(s,i){
+      var r=document.createElement('div');r.className='lb-row';
+      var extra;
+      if(s.demi!==undefined)extra=s.lives+' lives · '+s.demi+' demi';
+      else if(s.lives!==undefined)extra=s.lives+' lives';
+      else extra=s.moves+'mv';
+      r.innerHTML='<div class="lb-pos '+(medals[i]||'')+'">'+( i+1)+'</div><div class="lb-name">'+s.name+'</div><div class="lb-t">'+fmt(s.ms)+'</div><div class="lb-mv">'+extra+'</div>';
+      wrap.appendChild(r);
+    });
+  }catch(e){wrap.innerHTML='<div class="lb-empty">Could not load scores.</div>';}
+}
+async function finishGame(elapsed,moves,size,lives){
+  clearInterval(ticker);arkStopTimer();
+  elapsedTime=elapsed;
+  try{await saveScore(elapsed,moves,size,lives);}catch(e){}
+  var resultHtml='Cracked in <strong>'+fmt(elapsed)+'</strong> &nbsp;·&nbsp; <strong>'+moves+(size==='ark'?' score':' moves')+'</strong>';
+  if(lives!==undefined)resultHtml+=' &nbsp;·&nbsp; <strong>'+lives+' '+(lives===1?'life':'lives')+' remaining</strong>';
+  document.getElementById('rev-result').innerHTML=resultHtml;
+  await loadBoard(size,pname);
+  show('s-done');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SLIDING PUZZLE
+// ══════════════════════════════════════════════════════════════════════════════
+var G=3,TW=108,order=[],emptyAt=0,master=null,mc=0,currentPieces=[];
+function drawMaster(){
+  TW=G===3?108:82;var full=G*TW;
+  master=document.createElement('canvas');master.width=full;master.height=full;
+  var ctx=master.getContext('2d'),W=full,H=full;
+  ctx.fillStyle='#0D1F3C';ctx.fillRect(0,0,W,H);
+  var gr=ctx.createRadialGradient(W/2,H*.42,0,W/2,H*.42,W*.6);
+  gr.addColorStop(0,'rgba(30,111,255,0.7)');gr.addColorStop(0.45,'rgba(30,111,255,0.25)');gr.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='#fff';ctx.font='bold '+Math.round(H*.1)+'px "Arial Black",Arial';ctx.fillText('HAILO',W/2,H*.13);
+  ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font='bold '+Math.round(H*.055)+'px Arial';ctx.fillText('WE JUST HIT',W/2,H*.30);
+  ctx.fillStyle='#fff';ctx.font='bold '+Math.round(H*.2)+'px "Arial Black",Arial';ctx.fillText(MILESTONE_N||'?',W/2,H*.54);
+  ctx.fillStyle='#4DA3FF';ctx.font='bold '+Math.round(H*.057)+'px Arial';ctx.fillText((MILESTONE_LBL||'?').toUpperCase(),W/2,H*.72);
+  ctx.fillStyle='rgba(255,255,255,0.38)';ctx.font=Math.round(H*.037)+'px Arial';ctx.fillText('Homesearch.',W/2,H*.88);
+}
+function makeTile(idx){
+  var c=document.createElement('canvas');c.width=TW;c.height=TW;
+  c.style.cssText='display:block;width:'+TW+'px;height:'+TW+'px';
+  c.getContext('2d').drawImage(master,(idx%G)*TW,Math.floor(idx/G)*TW,TW,TW,0,0,TW,TW);
+  return c;
+}
+function makeTile(pieceIdx){
+  var c=document.createElement('canvas');c.width=TW;c.height=TW;
+  c.style.cssText='display:block;width:'+TW+'px;height:'+TW+'px';
+  c.getContext('2d').drawImage(master,(pieceIdx%G)*TW,Math.floor(pieceIdx/G)*TW,TW,TW,0,0,TW,TW);
+  return c;
+}
+function buildPuzzle(){
+  TW=G===3?108:82;var total=G*G,totalPx=TW*G+(G-1)*3+6;
+  var grid=document.getElementById('grid');
+  grid.style.cssText='grid-template-columns:repeat('+G+','+TW+'px);width:'+totalPx+'px;height:'+totalPx+'px';
+  grid.innerHTML='';currentPieces=[];
+  for(var i=0;i<total;i++){currentPieces.push(i);}
+  order=Array.from({length:total},function(_,i){return i;});
+  emptyAt=total-1;
+  for(var i=0;i<400;i++){var nb=sadj(emptyAt),pick=nb[Math.floor(Math.random()*nb.length)];var t=order[emptyAt];order[emptyAt]=order[pick];order[pick]=t;emptyAt=pick;}
+  renderGrid();
+}
+function sadj(idx){var r=[],row=Math.floor(idx/G),col=idx%G;if(row>0)r.push(idx-G);if(row<G-1)r.push(idx+G);if(col>0)r.push(idx-1);if(col<G-1)r.push(idx+1);return r;}
+function renderGrid(){
+  var grid=document.getElementById('grid');grid.innerHTML='';var total=G*G;
+  for(var i=0;i<total;i++){
+    var div=document.createElement('div');div.style.cssText='width:'+TW+'px;height:'+TW+'px';
+    div.className=order[i]===total-1?'tile empty':'tile';
+    if(order[i]!==total-1)div.appendChild(makeTile(order[i]));
+    div.addEventListener('click',(function(idx){return function(){handleClick(idx);};})(i));
+    grid.appendChild(div);
+  }
+}
+function handleClick(cidx){
+  if(!sadj(emptyAt).includes(cidx))return;
+  var t=order[emptyAt];order[emptyAt]=order[cidx];order[cidx]=t;
+  var pe=emptyAt;emptyAt=cidx;
+  var cells=document.getElementById('grid').children;
+  var ca=cells[pe];ca.className='tile';ca.style.cssText='width:'+TW+'px;height:'+TW+'px';ca.innerHTML='';ca.appendChild(makeTile(order[pe]));
+  var cb=cells[emptyAt];cb.className='tile empty';cb.innerHTML='';
+  mc++;document.getElementById('t-moves').textContent=mc;
+  if(order.every(function(v,i){return v===i;}))setTimeout(function(){finishGame(Date.now()-t0,mc,gSize);},200);
+}
+function startSliding(){
+  gSize=G;drawMaster();buildPuzzle();mc=0;
+  document.getElementById('t-moves').textContent='0';
+  document.getElementById('t-time').textContent='0:00';
+  show('s-play');startTimer();
+}
+function resetPuzzle(){buildPuzzle();mc=0;document.getElementById('t-moves').textContent='0';document.getElementById('t-time').textContent='0:00';startTimer();}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ARKANOID
+// ══════════════════════════════════════════════════════════════════════════════
+var arkRAF=null,arkLives=3,arkScore=0,arkLaunched=false,arkDead=false,arkWon=false,arkWonTime=0,arkTicker=null,arkHitFlash=0;
+var arkBricks=[],arkBalls=[],arkDrops=[],arkPx=0,arkPW=80,arkHitCount=0;
+var AW=420,AH=300,COLS=10,ROWS=5,BW=38,BH=12,BGAP=2,BR=7,PH=10,PY=AH-20;
+var GX=(AW-COLS*(BW+BGAP)+BGAP)/2,GY=22;
+var DROP_TYPES=['multi','wide','speed','narrow'];
+var DROP_COLORS={multi:'#22c55e',wide:'#a855f7',speed:'#ef4444',narrow:'#f97316'};
+var DROP_LABELS={multi:'x3',wide:'>>>',speed:'>>',narrow:'<>'};
+var arkMsgText='',arkMsgColor='#fff',arkMsgTimer=0;
+var arkCV=null,arkCX=null,arkMaster=null,arkT0=0,arkMoves=0;
+
+function buildArkMaster(){
+  // Generic background during play — no milestone visible
+  arkMaster=document.createElement('canvas');arkMaster.width=AW;arkMaster.height=AH;
+  var c=arkMaster.getContext('2d'),W=AW,H=AH;
+  c.fillStyle='#0A1628';c.fillRect(0,0,W,H);
+  // Subtle radial glow
+  var g=c.createRadialGradient(W/2,H*.45,0,W/2,H*.45,W*.65);
+  g.addColorStop(0,'rgba(30,111,255,0.18)');
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  c.fillStyle=g;c.fillRect(0,0,W,H);
+  // Very faint HAILO watermark
+  c.textAlign='center';c.textBaseline='middle';
+  c.fillStyle='rgba(255,255,255,0.04)';
+  c.font='bold '+Math.round(H*.28)+'px "Arial Black",Arial';
+  c.fillText('HAILO',W/2,H*.5);
+  // Small lock icon hint
+  c.fillStyle='rgba(255,255,255,0.08)';
+  c.font=Math.round(H*.06)+'px Arial';
+  c.fillText('Something big is locked inside...',W/2,H*.82);
+}
+
+// Confetti system
+var confettiPieces=[];
+var confettiColors=['#1E6FFF','#4DA3FF','#ffffff','#22c55e','#a855f7','#fbbf24'];
+function spawnConfetti(){
+  confettiPieces=[];
+  for(var i=0;i<120;i++){
+    confettiPieces.push({
+      x:Math.random()*AW,
+      y:-10-Math.random()*60,
+      w:6+Math.random()*8,
+      h:3+Math.random()*4,
+      r:Math.random()*Math.PI*2,
+      vx:(Math.random()-0.5)*4,
+      vy:2+Math.random()*4,
+      vr:(Math.random()-0.5)*0.2,
+      color:confettiColors[Math.floor(Math.random()*confettiColors.length)],
+      alpha:1
+    });
+  }
+}
+function updateConfetti(){
+  var alive=false;
+  for(var i=0;i<confettiPieces.length;i++){
+    var p=confettiPieces[i];
+    p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
+    if(p.y>AH+20)p.alpha-=0.05;
+    if(p.alpha>0)alive=true;
+  }
+  return alive;
+}
+function drawConfetti(cx){
+  for(var i=0;i<confettiPieces.length;i++){
+    var p=confettiPieces[i];
+    if(p.alpha<=0)continue;
+    cx.save();
+    cx.globalAlpha=Math.max(0,p.alpha);
+    cx.translate(p.x,p.y);
+    cx.rotate(p.r);
+    cx.fillStyle=p.color;
+    cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    cx.restore();
+  }
+  cx.globalAlpha=1;
+}
+
+function arkCountAlive(){var n=0;for(var i=0;i<arkBricks.length;i++)if(arkBricks[i].a)n++;return n;}
+function arkUI(){
+  var lc=document.getElementById('ark-lives-count');if(lc)lc.textContent=arkLives;
+  for(var i=0;i<3;i++)document.getElementById('ah'+i).className='ark-heart-emoji'+(i>=arkLives?' dead':'');
+}
+function arkStartTimer(){
+  arkT0=Date.now();
+  clearInterval(arkTicker);
+  arkTicker=setInterval(function(){
+    if(!arkDead&&!arkWon){
+      var el=document.getElementById('ark-time');
+      if(el)el.textContent=fmt(Date.now()-arkT0);
+    }
+  },500);
+}
+function arkStopTimer(){clearInterval(arkTicker);arkTicker=null;}
+function arkMsg(t,c){arkMsgText=t;arkMsgColor=c;arkMsgTimer=90;}
+
+function arkApplyDrop(t){
+  if(t==='multi'){
+    if(arkBalls.length>=4){arkMsg('MAX BALLS!','#22c55e');return;}
+    var nb=[];
+    for(var i=0;i<arkBalls.length;i++){
+      var b=arkBalls[i],sp=Math.sqrt(b.vx*b.vx+b.vy*b.vy)||5;
+      nb.push({x:b.x,y:b.y,vx:Math.cos(-Math.PI/2+0.5)*sp,vy:Math.sin(-Math.PI/2+0.5)*sp,r:BR,att:false});
+      nb.push({x:b.x,y:b.y,vx:Math.cos(-Math.PI/2-0.5)*sp,vy:Math.sin(-Math.PI/2-0.5)*sp,r:BR,att:false});
+    }
+    var can=4-arkBalls.length;
+    for(var i=0;i<Math.min(can,nb.length);i++)arkBalls.push(nb[i]);
+    arkMsg('MULTI-BALL!','#22c55e');
+  } else if(t==='wide'){
+    arkPW=Math.min(130,arkPW+36);arkMsg('WIDE PADDLE!','#a855f7');
+    setTimeout(function(){arkPW=Math.max(80,arkPW-36);},7000);
+  } else if(t==='speed'){
+    for(var i=0;i<arkBalls.length;i++){
+      var sp=Math.sqrt(arkBalls[i].vx*arkBalls[i].vx+arkBalls[i].vy*arkBalls[i].vy);
+      if(sp>0&&sp<9){var f=Math.min(sp*1.35,9)/sp;arkBalls[i].vx*=f;arkBalls[i].vy*=f;}
+    }
+    arkMsg('SPEED UP!','#ef4444');
+  } else if(t==='narrow'){
+    arkPW=Math.max(44,arkPW-28);arkMsg('NARROW!','#f97316');
+    setTimeout(function(){arkPW=Math.min(80,arkPW+28);},5000);
+  }
+}
+
+function arkSpawnDrop(x,y){
+  if(arkHitCount%7!==0)return;
+  var t=DROP_TYPES[Math.floor(Math.random()*DROP_TYPES.length)];
+  arkDrops.push({x:x,y:y,vy:2.2,type:t,w:28,h:14,alive:true});
+}
+
+function arkInit(){
+  var overlay=document.getElementById('ark-dead-overlay');
+  if(overlay)overlay.style.display='none';
+  arkLives=3;arkScore=0;arkLaunched=false;arkDead=false;arkWon=false;arkWonTime=0;arkHitFlash=0;
+  arkPW=80;arkHitCount=0;arkPx=AW/2-arkPW/2;
+  arkBalls=[{x:AW/2,y:PY-BR-1,vx:0,vy:0,r:BR,att:true}];
+  arkDrops=[];arkBricks=[];
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)
+    arkBricks.push({x:GX+c*(BW+BGAP),y:GY+r*(BH+BGAP),a:true,h:0,maxh:r<2?1:2});
+  arkUI();
+}
+
+function arkLaunch(){
+  if(arkDead||arkWon)return;
+  var anyFree=arkBalls.some(function(b){return!b.att;});
+  if(anyFree)return;
+  arkLaunched=true;
+  for(var i=0;i<arkBalls.length;i++){
+    arkBalls[i].att=false;
+    var a=-Math.PI/2+(Math.random()-.5)*.7;
+    arkBalls[i].vx=Math.cos(a)*5.0;arkBalls[i].vy=Math.sin(a)*5.0;
+  }
+}
+
+function arkStop(){if(arkRAF){cancelAnimationFrame(arkRAF);arkRAF=null;}}
+function arkQuit(){arkStopTimer();arkStop();goHome();}
+
+function startArkanoid(){
+  buildArkMaster();arkInit();
+  show('s-ark');
+  arkT0=Date.now();arkMoves=0;
+  arkCV=document.getElementById('ark-cv');
+  arkCX=arkCV.getContext('2d');
+  arkCV.addEventListener('mousemove',arkMouseMove);
+  arkCV.addEventListener('click',arkClick);
+  window.addEventListener('keydown',arkKey);
+  arkStartTimer();
+  arkStop();arkRAF=requestAnimationFrame(arkFrame);
+}
+
+function arkMouseMove(e){
+  var r=arkCV.getBoundingClientRect();
+  arkPx=Math.max(0,Math.min(AW-arkPW,e.clientX-r.left-arkPW/2));
+  for(var i=0;i<arkBalls.length;i++)if(arkBalls[i].att)arkBalls[i].x=arkPx+arkPW/2;
+}
+function arkRestart(){
+  var overlay=document.getElementById('ark-dead-overlay');
+  if(overlay)overlay.style.display='none';
+  arkStop();arkInit();buildArkMaster();
+  arkStartTimer();
+  arkRAF=requestAnimationFrame(arkFrame);
+}
+function arkClick(){
+  if(arkDead){return;} // handled by HTML overlay buttons
+  if(arkWon){return;}
+  arkLaunch();
+}
+function arkKey(e){
+  if(e.code==='Space'){e.preventDefault();arkLaunch();return;}
+
+}
+
+function arkFrame(){
+  var cx=arkCX,W=AW,H=AH;
+  cx.clearRect(0,0,W,H);
+  cx.drawImage(arkMaster,0,0);
+  // Red flash on life lost
+  if(arkHitFlash>0){
+    cx.fillStyle='rgba(239,68,68,'+(arkHitFlash/25*0.4)+')';
+    cx.fillRect(0,0,AW,AH);
+    arkHitFlash--;
+  }
+
+  // Bricks
+  for(var i=0;i<arkBricks.length;i++){
+    var b=arkBricks[i];if(!b.a)continue;
+    cx.fillStyle=b.h===0?'rgba(13,31,60,0.96)':'rgba(20,45,90,0.6)';
+    cx.fillRect(b.x,b.y,BW,BH);
+    cx.strokeStyle=b.h===0?'rgba(77,163,255,0.65)':'rgba(77,163,255,0.25)';
+    cx.lineWidth=1;cx.strokeRect(b.x+.5,b.y+.5,BW-1,BH-1);
+    if(b.h>0&&b.maxh>1){cx.strokeStyle='rgba(255,255,255,0.25)';cx.lineWidth=1;cx.beginPath();cx.moveTo(b.x+4,b.y+3);cx.lineTo(b.x+BW-6,b.y+BH-3);cx.moveTo(b.x+8,b.y+BH-4);cx.lineTo(b.x+BW-5,b.y+4);cx.stroke();}
+  }
+
+  // Drops
+  for(var i=0;i<arkDrops.length;i++){
+    var d=arkDrops[i];if(!d.alive)continue;
+    cx.fillStyle=DROP_COLORS[d.type];
+    cx.beginPath();cx.roundRect(d.x-d.w/2,d.y-d.h/2,d.w,d.h,4);cx.fill();
+    cx.fillStyle='#fff';cx.font='bold 9px Arial';cx.textAlign='center';cx.textBaseline='middle';
+    cx.fillText(DROP_LABELS[d.type],d.x,d.y);
+  }
+
+  // Paddle
+  var pg=cx.createLinearGradient(arkPx,0,arkPx+arkPW,0);
+  pg.addColorStop(0,'#1E6FFF');pg.addColorStop(1,'#4DA3FF');
+  cx.fillStyle=pg;cx.beginPath();cx.roundRect(arkPx,PY,arkPW,PH,5);cx.fill();
+
+  // Balls
+  for(var i=0;i<arkBalls.length;i++){
+    cx.beginPath();cx.arc(arkBalls[i].x,arkBalls[i].y,BR,0,Math.PI*2);
+    cx.fillStyle='#fff';cx.fill();cx.strokeStyle='rgba(77,163,255,0.5)';cx.lineWidth=1.5;cx.stroke();
+  }
+
+  // Launch prompt
+  if(arkBalls.every(function(b){return b.att;})&&!arkDead&&!arkWon){
+    cx.fillStyle='rgba(77,163,255,0.9)';cx.font='bold 12px Arial';cx.textAlign='center';cx.textBaseline='middle';
+    cx.fillText('CLICK TO LAUNCH',W/2,H/2+20);
+  }
+
+  // Message flash
+  if(arkMsgTimer>0){
+    arkMsgTimer--;
+    cx.globalAlpha=Math.min(1,arkMsgTimer/15);
+    cx.font='bold 20px "Arial Black",Arial';cx.textAlign='center';cx.textBaseline='middle';
+    cx.fillStyle=arkMsgColor;cx.fillText(arkMsgText,W/2,H/2-10);
+    cx.globalAlpha=1;
+  }
+
+  // WIN — shown first so it takes priority
+  if(arkWon){
+    cx.clearRect(0,0,AW,AH);
+    cx.fillStyle='#0A1628';cx.fillRect(0,0,AW,AH);
+    var bg=cx.createRadialGradient(AW/2,AH*.45,0,AW/2,AH*.45,AW*.65);
+    bg.addColorStop(0,'rgba(30,111,255,0.5)');bg.addColorStop(0.5,'rgba(30,111,255,0.15)');bg.addColorStop(1,'rgba(0,0,0,0)');
+    cx.fillStyle=bg;cx.fillRect(0,0,AW,AH);
+    cx.textAlign='center';cx.textBaseline='middle';
+    cx.fillStyle='rgba(77,163,255,0.9)';cx.font='bold 11px Arial';cx.fillText('WE JUST HIT',AW/2,AH*.18);
+    cx.fillStyle='#ffffff';cx.font='bold '+Math.round(AH*.20)+'px "Arial Black",Arial';cx.fillText(MILESTONE_N||'?',AW/2,AH*.44);
+    cx.fillStyle='#4DA3FF';cx.font='bold '+Math.round(AH*.055)+'px Arial';cx.fillText((MILESTONE_LBL||'?').toUpperCase(),AW/2,AH*.63);
+    cx.fillStyle='rgba(255,255,255,0.35)';cx.font=Math.round(AH*.036)+'px Arial';cx.fillText('Homesearch.',AW/2,AH*.74);
+    cx.fillStyle='rgba(255,255,255,0.45)';cx.font='12px Arial';cx.fillText('Time: '+fmt(arkWonTime-arkT0)+'  ·  Score: '+arkScore,AW/2,AH*.84);
+    updateConfetti();drawConfetti(cx);
+    var confettiElapsed=Date.now()-arkWonTime;
+    if(confettiElapsed<3200){
+      arkRAF=requestAnimationFrame(arkFrame);
+    } else {
+      arkRAF=null;
+      finishGame(arkWonTime-arkT0,arkScore,'ark',arkLives);
+    }
+    return;
+  }
+
+  // GAME OVER — show HTML overlay instead of drawing on canvas
+  if(arkDead){
+    var overlay=document.getElementById('ark-dead-overlay');
+    if(overlay){
+      overlay.style.display='flex';
+      var stats=document.getElementById('ark-dead-stats');
+      if(stats)stats.textContent='Time: '+fmt(Date.now()-arkT0)+'  ·  Score: '+arkScore;
+    }
+    return;
+  }
+
+  // Physics
+  for(var i=arkBalls.length-1;i>=0;i--){
+    var b=arkBalls[i];if(b.att)continue;
+    b.x+=b.vx;b.y+=b.vy;
+    if(b.x-b.r<0){b.x=b.r;b.vx=Math.abs(b.vx);}
+    if(b.x+b.r>W){b.x=W-b.r;b.vx=-Math.abs(b.vx);}
+    if(b.y-b.r<0){b.y=b.r;b.vy=Math.abs(b.vy);}
+    if(b.vy>0&&b.y+b.r>=PY&&b.y-b.r<=PY+PH&&b.x>=arkPx&&b.x<=arkPx+arkPW){
+      b.vy=-Math.abs(b.vy);
+      b.vx=((b.x-(arkPx+arkPW/2))/(arkPW/2))*5.5;
+      var sp=Math.sqrt(b.vx*b.vx+b.vy*b.vy);if(sp<8.5){var f=(sp*1.012)/sp;b.vx*=f;b.vy*=f;}
+      b.y=PY-b.r-1;
+    }
+    if(b.y-b.r>H){
+      arkBalls.splice(i,1);
+      if(arkBalls.length===0){
+        arkLives--;arkUI();
+        arkHitFlash=25; // red screen flash on life lost
+        if(arkLives<=0){arkDead=true;arkStopTimer();arkRAF=requestAnimationFrame(arkFrame);return;}
+        arkBalls=[{x:arkPx+arkPW/2,y:PY-BR-1,vx:0,vy:0,r:BR,att:true}];
+        arkLaunched=false;
+      }
+      continue;
+    }
+    for(var j=0;j<arkBricks.length;j++){
+      var k=arkBricks[j];if(!k.a)continue;
+      if(b.x+b.r>k.x&&b.x-b.r<k.x+BW&&b.y+b.r>k.y&&b.y-b.r<k.y+BH){
+        k.h++;arkHitCount++;
+        if(k.h>=k.maxh){k.a=false;arkScore+=10;arkMoves++;arkSpawnDrop(k.x+BW/2,k.y+BH/2);}
+        else arkScore+=5;
+        var oL=b.x+b.r-k.x,oR=k.x+BW-(b.x-b.r),oT=b.y+b.r-k.y,oB=k.y+BH-(b.y-b.r);
+        if(Math.min(oL,oR)<Math.min(oT,oB))b.vx*=-1;else b.vy*=-1;
+        arkUI();break;
+      }
+    }
+  }
+
+  // Drop physics
+  for(var i=arkDrops.length-1;i>=0;i--){
+    var d=arkDrops[i];if(!d.alive)continue;
+    d.y+=d.vy;
+    if(d.y>H){arkDrops.splice(i,1);continue;}
+    if(d.y+d.h/2>=PY&&d.y-d.h/2<=PY+PH&&d.x>=arkPx&&d.x<=arkPx+arkPW){
+      d.alive=false;arkDrops.splice(i,1);arkApplyDrop(d.type);continue;
+    }
+  }
+
+  if(arkCountAlive()===0){
+    arkWon=true;arkWonTime=Date.now();spawnConfetti();
+    arkRAF=requestAnimationFrame(arkFrame);  // keep loop running for confetti+reveal
+    return;
+  }
+  arkRAF=requestAnimationFrame(arkFrame);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PORTAL ESCAPE RUNNER
+// ══════════════════════════════════════════════════════════════════════════════
+var runCV,runCX,runRW=420,runRH=340;
+var runState='idle';
+var runLives,runTimeLeft,runScore,runFrame,runRAF;
+var runLane,runPx,runInvincible,runHitFlash;
+var runObstacles=[],runParticles=[],runDemiTokens=[];
+var runDemiCount,runDemiTimer,runSpawnTimer,runSpawnCount;
+var runRecentLanes=[],runLaneCounts=[0,0,0];
+var runScrollSpeed,runBgOff=0;
+var runT0;
+
+var demiImgRun=new Image();
+demiImgRun.src='data:image/png;base64,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';
+
+var RUN_LANE_XS=[runRW*0.2,runRW*0.5,runRW*0.8];
+var RUN_PLAYER_Y=runRH-80;
+var RUN_PW=38,RUN_PH=54,RUN_OW=52,RUN_OH=56;
+
+var RUN_PORTALS=[
+  {name:'Rightmove', tag:'RMV',label:'Portal Trap',  bg:'#7f1d1d',border:'#ef4444',accent:'#ff6b6b'},
+  {name:'Zoopla',    tag:'ZPL',label:'Premium Lock', bg:'#2e1065',border:'#a855f7',accent:'#c084fc'},
+  {name:'OnTheMarket',tag:'OTM',label:'Legacy Search',bg:'#042f2e',border:'#14b8a6',accent:'#5eead4'},
+  {name:'Portal Fee',tag:'£££',label:'Hidden Cost',  bg:'#451a03',border:'#f97316',accent:'#fdba74'},
+];
+var RUN_WIDE=[
+  {name:'Rightmove', tag:'RMV EXCLUSIVE',label:'No Escape',  bg:'#7f1d1d',border:'#ef4444',accent:'#ff6b6b'},
+  {name:'Zoopla',    tag:'ZPL PREMIUM',  label:'Pay to Play',bg:'#2e1065',border:'#a855f7',accent:'#c084fc'},
+  {name:'OnTheMarket',tag:'OTM ONLY',   label:'Locked Out', bg:'#042f2e',border:'#14b8a6',accent:'#5eead4'},
+];
+
+function runInit(){
+  runLives=3;runTimeLeft=40;runScore=0;runFrame=0;
+  runLane=1;runPx=RUN_LANE_XS[1];runInvincible=0;runHitFlash=0;
+  runObstacles=[];runParticles=[];runDemiTokens=[];
+  runDemiCount=0;runDemiTimer=200;
+  runSpawnTimer=65;runSpawnCount=0;
+  runRecentLanes=[];runLaneCounts=[0,0,0];
+  runScrollSpeed=5.5;runBgOff=0;
+  runT0=Date.now();
+  runUpdateHUD();
+  var ol=document.getElementById('run-dead-overlay');
+  if(ol)ol.classList.add('hidden');
+}
+
+function runUpdateHUD(){
+  var t=document.getElementById('run-time');
+  if(t){t.textContent=Math.ceil(runTimeLeft);t.className='stat-n'+(runTimeLeft<=8?' red':'');}
+  var s=document.getElementById('run-score');if(s)s.textContent=runScore;
+  var d=document.getElementById('run-demi');if(d)d.textContent=runDemiCount;
+  for(var i=0;i<3;i++){
+    var h=document.getElementById('rh'+i);
+    if(h)h.className='ark-heart'+(i>=runLives?' dead':'');
+  }
+}
+
+function runMove(dir){
+  if(runState!=='playing')return;
+  var n=runLane+dir;
+  if(n<0||n>2)return;
+  runLane=n;
+}
+
+function runGetLaneBias(){
+  var last=runRecentLanes[runRecentLanes.length-1];
+  var prev=runRecentLanes[runRecentLanes.length-2];
+  var pool=[];
+  for(var l=0;l<3;l++){
+    if(l===last&&l===prev)continue;
+    var w=Math.max(1,6-runLaneCounts[l]);
+    for(var i=0;i<w;i++)pool.push(l);
+  }
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function runRecordLane(l){
+  runRecentLanes.push(l);
+  if(runRecentLanes.length>4)runRecentLanes.shift();
+  runLaneCounts[l]++;
+}
+
+function runSpawn(){
+  runSpawnCount++;
+  var doWide=(runSpawnCount%5===0)&&(runTimeLeft<20);
+  if(doWide){
+    var opts=[0,1,2].filter(function(l){return l!==runLane;});
+    var safe=opts[Math.floor(Math.random()*opts.length)];
+    var p=RUN_WIDE[Math.floor(Math.random()*RUN_WIDE.length)];
+    for(var l=0;l<3;l++){
+      if(l===safe)continue;
+      runObstacles.push({x:RUN_LANE_XS[l],y:-60,lane:l,portal:p,scored:false,isWide:true,safeLane:safe});
+    }
+    runRecordLane(safe);
+  } else {
+    var l=runGetLaneBias();
+    runRecordLane(l);
+    var p=RUN_PORTALS[Math.floor(Math.random()*RUN_PORTALS.length)];
+    runObstacles.push({x:RUN_LANE_XS[l],y:-60,lane:l,portal:p,scored:false,isWide:false});
+  }
+}
+
+function runDrawBG(cx){
+  var g=runCX.createLinearGradient(0,0,0,runRH);
+  g.addColorStop(0,'#040b18');g.addColorStop(1,'#0c1e3c');
+  runCX.fillStyle=g;runCX.fillRect(0,0,runRW,runRH);
+  runBgOff=(runBgOff+runScrollSpeed*0.6)%60;
+  runCX.strokeStyle='rgba(77,163,255,0.09)';runCX.lineWidth=1;
+  for(var y=-runBgOff;y<runRH+60;y+=60){runCX.beginPath();runCX.moveTo(0,y);runCX.lineTo(runRW,y);runCX.stroke();}
+  runCX.strokeStyle='rgba(77,163,255,0.18)';runCX.lineWidth=1;
+  runCX.setLineDash([12,10]);
+  runCX.beginPath();runCX.moveTo(runRW/3,0);runCX.lineTo(runRW/3,runRH);runCX.stroke();
+  runCX.beginPath();runCX.moveTo(runRW*2/3,0);runCX.lineTo(runRW*2/3,runRH);runCX.stroke();
+  runCX.setLineDash([]);
+  runCX.strokeStyle='rgba(77,163,255,0.5)';runCX.lineWidth=2;
+  runCX.shadowColor='#4DA3FF';runCX.shadowBlur=8;
+  runCX.beginPath();runCX.moveTo(0,runRH-40);runCX.lineTo(runRW,runRH-40);runCX.stroke();
+  runCX.shadowBlur=0;
+  var tg=runCX.createLinearGradient(0,0,0,60);
+  tg.addColorStop(0,'rgba(30,111,255,0.35)');tg.addColorStop(1,'rgba(30,111,255,0)');
+  runCX.fillStyle=tg;runCX.fillRect(0,0,runRW,60);
+  runCX.fillStyle='rgba(77,163,255,0.7)';runCX.font='bold 10px Arial';
+  runCX.textAlign='center';runCX.textBaseline='top';
+  runCX.fillText('* AI DISCOVERY *',runRW/2,8);
+  if(runHitFlash>0){runCX.fillStyle='rgba(239,68,68,'+(runHitFlash/18*0.35)+')';runCX.fillRect(0,0,runRW,runRH);runHitFlash--;}
+}
+
+function runDrawObs(){
+  var sorted=runObstacles.slice().sort(function(a,b){return(b.isWide?1:0)-(a.isWide?1:0);});
+  for(var i=0;i<sorted.length;i++){
+    var ob=sorted[i],p=ob.portal;
+    var w=ob.isWide?(RUN_OW*1.15):RUN_OW;
+    var h=ob.isWide?(RUN_OH*1.1):RUN_OH;
+    var ox=ob.x-w/2,oy=ob.y;
+    runCX.shadowColor=p.border;runCX.shadowBlur=ob.isWide?18:10;
+    runCX.fillStyle=p.bg;runCX.beginPath();runCX.roundRect(ox,oy,w,h,6);runCX.fill();
+    runCX.fillStyle=p.border;runCX.beginPath();runCX.roundRect(ox,oy,w,h*0.28,[6,6,0,0]);runCX.fill();
+    runCX.fillStyle='rgba(255,255,255,0.15)';runCX.fillRect(ox+4,oy+2,w-8,h*0.1);
+    runCX.strokeStyle=p.border;runCX.lineWidth=ob.isWide?2.5:2;
+    runCX.beginPath();runCX.roundRect(ox,oy,w,h,6);runCX.stroke();
+    runCX.shadowBlur=0;
+    runCX.fillStyle='#fff';runCX.font='bold '+(ob.isWide?10:11)+'px Arial';
+    runCX.textAlign='center';runCX.textBaseline='middle';
+    runCX.fillText(p.tag,ob.x,oy+h*0.14);
+    runCX.strokeStyle='rgba(255,255,255,0.1)';runCX.lineWidth=0.5;
+    runCX.beginPath();runCX.moveTo(ox+4,oy+h*0.28);runCX.lineTo(ox+w-4,oy+h*0.28);runCX.stroke();
+    runCX.fillStyle=p.accent;runCX.font='bold 8px Arial';runCX.fillText(p.name,ob.x,oy+h*0.52);
+    runCX.fillStyle='rgba(255,255,255,0.5)';runCX.font='6px Arial';runCX.fillText(p.label,ob.x,oy+h*0.72);
+  }
+  for(var wi=0;wi<runObstacles.length;wi++){
+    var wo=runObstacles[wi];
+    if(wo.isWide&&wo.y<runRH*0.45&&wo.y>0){
+      var alpha=Math.min(0.9,(runRH*0.45-wo.y)/(runRH*0.3));
+      runCX.globalAlpha=alpha;runCX.fillStyle='#22c55e';
+      runCX.font='bold 10px Arial';runCX.textAlign='center';runCX.textBaseline='middle';
+      runCX.fillText('v SAFE',RUN_LANE_XS[wo.safeLane],runRH-54);
+      runCX.globalAlpha=1;break;
+    }
+  }
+}
+
+function runDrawPlayer(){
+  runPx+=(RUN_LANE_XS[runLane]-runPx)*0.22;
+  var alpha=1;
+  if(runInvincible>0&&Math.floor(runInvincible/5)%2===0)alpha=0.2;
+  runCX.globalAlpha=alpha;
+  var sx=runPx,sy=RUN_PLAYER_Y,pw=RUN_PW,ph=RUN_PH;
+  runCX.fillStyle='#92400e';runCX.fillRect(sx-3,sy+ph*0.55,6,ph*0.45);
+  var bh=ph*0.58,bw=pw*0.95,bx=sx-bw/2,by=sy;
+  runCX.fillStyle='rgba(0,0,0,0.3)';runCX.beginPath();runCX.roundRect(bx+2,by+2,bw,bh,3);runCX.fill();
+  runCX.fillStyle='#f8fafc';runCX.beginPath();runCX.roundRect(bx,by,bw,bh,3);runCX.fill();
+  runCX.fillStyle='#1d4ed8';runCX.beginPath();runCX.roundRect(bx,by,bw,bh*0.36,[3,3,0,0]);runCX.fill();
+  runCX.fillStyle='#fff';runCX.font='bold 6.5px Arial';runCX.textAlign='center';runCX.textBaseline='middle';
+  runCX.fillText('FOR SALE',sx,by+bh*0.18);
+  runCX.fillStyle='#fff';runCX.fillRect(bx+2,by+bh*0.36,bw-4,bh*0.64-2);
+  runCX.fillStyle='#374151';runCX.font='4.5px Arial';runCX.fillText('01234 567890',sx,by+bh*0.52);
+  runCX.fillStyle='#94a3b8';runCX.font='4px Arial';runCX.fillText('estate agents',sx,by+bh*0.77);
+  runCX.strokeStyle='#1d4ed8';runCX.lineWidth=1.5;runCX.beginPath();runCX.roundRect(bx,by,bw,bh,3);runCX.stroke();
+  if(runInvincible>0){
+    runCX.shadowColor='#4DA3FF';runCX.shadowBlur=16;runCX.strokeStyle='#4DA3FF';runCX.lineWidth=2;
+    runCX.beginPath();runCX.roundRect(bx-3,by-3,bw+6,bh+6,6);runCX.stroke();runCX.shadowBlur=0;
+  }
+  runCX.globalAlpha=1;
+}
+
+function runDrawDemi(){
+  for(var pi=runParticles.length-1;pi>=0;pi--){
+    var p=runParticles[pi];
+    p.x+=p.vx;p.y+=p.vy;p.vy+=0.1;p.alpha-=0.03;
+    if(p.alpha<=0){runParticles.splice(pi,1);continue;}
+    runCX.globalAlpha=p.alpha;runCX.fillStyle=p.color;
+    runCX.beginPath();runCX.arc(p.x,p.y,p.size,0,Math.PI*2);runCX.fill();runCX.globalAlpha=1;
+  }
+  for(var di=0;di<runDemiTokens.length;di++){
+    var dt=runDemiTokens[di],r=22;
+    runCX.shadowColor='#fbbf24';runCX.shadowBlur=18;
+    runCX.strokeStyle='rgba(251,191,36,0.35)';runCX.lineWidth=1.5;
+    runCX.beginPath();runCX.arc(dt.x,dt.y,r+8,0,Math.PI*2);runCX.stroke();
+    runCX.strokeStyle='#fbbf24';runCX.lineWidth=3;
+    runCX.beginPath();runCX.arc(dt.x,dt.y,r+2,0,Math.PI*2);runCX.stroke();
+    runCX.shadowBlur=0;
+    runCX.save();runCX.beginPath();runCX.arc(dt.x,dt.y,r,0,Math.PI*2);runCX.clip();
+    if(demiImgRun.complete&&demiImgRun.naturalWidth>0){
+      runCX.drawImage(demiImgRun,dt.x-r,dt.y-r,r*2,r*2);
+    } else {runCX.fillStyle='#fbbf24';runCX.fill();}
+    runCX.restore();
+    runCX.fillStyle='#fbbf24';runCX.font='bold 8px Arial';
+    runCX.textAlign='center';runCX.textBaseline='top';runCX.fillText('DEMI',dt.x,dt.y+r+4);
+  }
+}
+
+function runCheckHits(){
+  if(runInvincible>0)return;
+  for(var i=runObstacles.length-1;i>=0;i--){
+    var ob=runObstacles[i];
+    var pl=runPx-RUN_PW/2+4,pr=runPx+RUN_PW/2-4;
+    var pt=RUN_PLAYER_Y+4,pb=RUN_PLAYER_Y+RUN_PH*0.58;
+    var ol=ob.x-RUN_OW/2+4,or2=ob.x+RUN_OW/2-4,ob2=ob.y+RUN_OH;
+    if(ob2>pt&&ob.y<pb&&or2>pl&&ol<pr){
+      runObstacles.splice(i,1);runLives--;runInvincible=120;runHitFlash=18;
+      runUpdateHUD();
+      if(runLives<=0){runEndGame('dead');return;}
+    } else if(!ob.scored&&ob.y>RUN_PLAYER_Y+RUN_PH){
+      ob.scored=true;runScore+=10;runUpdateHUD();
+    }
+  }
+}
+
+function runCheckDemi(){
+  for(var di=runDemiTokens.length-1;di>=0;di--){
+    var dt=runDemiTokens[di];
+    if(Math.abs(runPx-dt.x)<28&&Math.abs((RUN_PLAYER_Y+RUN_PH*0.3)-dt.y)<30){
+      runDemiCount++;runScore+=25;
+      for(var pi=0;pi<12;pi++){
+        runParticles.push({x:dt.x,y:dt.y,vx:(Math.random()-0.5)*5,vy:-Math.random()*4,alpha:1,size:3+Math.random()*3,color:'#fbbf24'});
+      }
+      runDemiTokens.splice(di,1);runUpdateHUD();
+    }
+  }
+}
+
+function runTick(){
+  if(runState!=='playing')return;
+  runFrame++;runTimeLeft-=1/60;
+  if(runTimeLeft<=0){runTimeLeft=0;runEndGame('win');return;}
+  runScrollSpeed=Math.min(5.5+((40-runTimeLeft)*0.07),8.5);
+  runSpawnTimer--;
+  if(runSpawnTimer<=0){runSpawn();runSpawnTimer=Math.max(30,65-Math.floor((40-runTimeLeft)*1.1));}
+  for(var i=runObstacles.length-1;i>=0;i--){
+    runObstacles[i].y+=runScrollSpeed;if(runObstacles[i].y>runRH+20)runObstacles.splice(i,1);
+  }
+  runDemiTimer--;
+  if(runDemiTimer<=0){
+    runDemiTokens.push({x:RUN_LANE_XS[Math.floor(Math.random()*3)],y:-50});
+    runDemiTimer=160+Math.floor(Math.random()*100);
+  }
+  for(var di=runDemiTokens.length-1;di>=0;di--){
+    runDemiTokens[di].y+=runScrollSpeed*0.72;if(runDemiTokens[di].y>runRH+40)runDemiTokens.splice(di,1);
+  }
+  if(runInvincible>0)runInvincible--;
+  runCheckHits();runCheckDemi();runUpdateHUD();
+  runCX.clearRect(0,0,runRW,runRH);
+  runDrawBG();runDrawObs();runDrawDemi();runDrawPlayer();
+  // Progress bar
+  var pct=1-runTimeLeft/40;
+  runCX.fillStyle='rgba(255,255,255,0.05)';runCX.fillRect(0,runRH-5,runRW,5);
+  var pg=runCX.createLinearGradient(0,0,runRW,0);pg.addColorStop(0,'#1E6FFF');pg.addColorStop(1,'#4DA3FF');
+  runCX.fillStyle=pct<0.85?pg:'#22c55e';runCX.fillRect(0,runRH-5,runRW*pct,5);
+  // Last 8s warning
+  if(runTimeLeft<=8){
+    runCX.globalAlpha=0.5+Math.sin(runFrame*0.25)*0.5;
+    runCX.fillStyle='#22c55e';runCX.font='bold 10px Arial';
+    runCX.textAlign='center';runCX.textBaseline='middle';
+    runCX.fillText('ALMOST THERE - '+Math.ceil(runTimeLeft)+'s',runRW/2,runRH-50);
+    runCX.globalAlpha=1;
+  }
+  runRAF=requestAnimationFrame(runTick);
+}
+
+function runEndGame(result){
+  runState=result;cancelAnimationFrame(runRAF);
+  if(result==='dead'){
+    var ol=document.getElementById('run-dead-overlay');
+    if(ol){
+      ol.classList.remove('hidden');
+      var st=document.getElementById('run-dead-stats');
+      if(st)st.innerHTML='The old portals caught your listing.<br/>Score: <strong style="color:#fff">'+runScore+'</strong> &nbsp;·&nbsp; Demi: <strong style="color:#fbbf24">'+runDemiCount+'</strong>';
+    }
+  } else {
+    // Win — save score then show reveal
+    var elapsed=Date.now()-runT0;
+    var lbScore=runScore+(runLives*100)+(runDemiCount*25);
+    saveScore(elapsed,lbScore,'run',runLives,runDemiCount).then(function(){
+      finishGame(elapsed,lbScore,'run',runLives);
+    }).catch(function(){
+      finishGame(elapsed,lbScore,'run',runLives);
+    });
+  }
+}
+
+function runRestart(){
+  var ol=document.getElementById('run-dead-overlay');if(ol)ol.classList.add('hidden');
+  runInit();runState='playing';runRAF=requestAnimationFrame(runTick);
+}
+function runQuit(){
+  cancelAnimationFrame(runRAF);runState='idle';
+  document.getElementById('pname').value='';
+  document.getElementById('bgo').disabled=true;
+  show('s-land');
+}
+
+function startRunner(){
+  runCV=document.getElementById('run-canvas');
+  runCX=runCV.getContext('2d');
+  // Set up input handlers (only once)
+  if(!runCV._listenersAdded){
+    document.getElementById('run-tap-l').addEventListener('click',function(){runMove(-1);});
+    document.getElementById('run-tap-r').addEventListener('click',function(){runMove(1);});
+    window.addEventListener('keydown',function(e){
+      if(runState!=='playing')return;
+      if(e.key==='ArrowLeft'||e.key==='a'){e.preventDefault();runMove(-1);}
+      if(e.key==='ArrowRight'||e.key==='d'){e.preventDefault();runMove(1);}
+    });
+    runCV._listenersAdded=true;
+  }
+  runInit();runState='playing';
+  show('s-run');
+  runRAF=requestAnimationFrame(runTick);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CROSSY LISTING GAME
+// ══════════════════════════════════════════════════════════════════════════════
+var crossCV,crossCX,CROSS_W=420,CROSS_H=420;
+var crossState='idle';
+var crossLives,crossTimeLeft,crossFnum,crossRAF,crossFlash;
+var crossLevel=0;
+var crossVehs=[],crossP={};
+var crossT0;
+
+// Portal icons
+var crossIcons={};
+(function(){
+  var srcs={rm:'data:image/png;base64,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',otm:'data:image/png;base64,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',zpl:'data:image/png;base64,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'};
+  for(var k in srcs){var img=new Image();img.src=srcs[k];crossIcons[k]=img;}
+})();
+
+var CROSS_COLS=7,CROSS_ROWS=10;
+var CROSS_CW,CROSS_CH;
+
+var CROSS_LEVELS=[
+  {name:'OnTheMarket',tag:'OTM',num:'01',color:'#f47c6a',dark:'#4a1a14',textCol:'#ffb5a8',
+   tagline:'The weakest challenger',winLine:'You broke free from the challenger.',
+   rows:[
+    {type:'goal'},{type:'road',dir:1,spd:1.4,tag:'OTM',col:'#f47c6a',icon:'otm',dark:'#4a1a14',count:2},
+    {type:'road',dir:-1,spd:1.8,tag:'OTM',col:'#f47c6a',icon:'otm',dark:'#4a1a14',count:2},{type:'safe'},
+    {type:'road',dir:1,spd:2.0,tag:'OTM',col:'#f47c6a',icon:'otm',dark:'#4a1a14',count:2},
+    {type:'road',dir:-1,spd:1.6,tag:'OTM',col:'#f47c6a',icon:'otm',dark:'#4a1a14',count:2},{type:'safe'},
+    {type:'road',dir:1,spd:1.2,tag:'OTM',col:'#f47c6a',icon:'otm',dark:'#4a1a14',count:2},
+    {type:'road',dir:-1,spd:1.9,tag:'OTM',col:'#f47c6a',icon:'otm',dark:'#4a1a14',count:2},{type:'start'}
+  ]},
+  {name:'Zoopla',tag:'ZPL',num:'02',color:'#a855f7',dark:'#2e1065',textCol:'#c084fc',
+   tagline:'Always number 2, never number 1',winLine:'You outran the purple machine.',
+   rows:[
+    {type:'goal'},{type:'road',dir:1,spd:2.2,tag:'ZPL',col:'#a855f7',icon:'zpl',dark:'#2e1065',count:3},
+    {type:'road',dir:-1,spd:2.8,tag:'ZPL',col:'#a855f7',icon:'zpl',dark:'#2e1065',count:3},
+    {type:'road',dir:1,spd:3.2,tag:'ZPL',col:'#a855f7',icon:'zpl',dark:'#2e1065',count:2},{type:'safe'},
+    {type:'road',dir:-1,spd:2.5,tag:'ZPL',col:'#a855f7',icon:'zpl',dark:'#2e1065',count:3},
+    {type:'road',dir:1,spd:3.0,tag:'ZPL',col:'#a855f7',icon:'zpl',dark:'#2e1065',count:2},
+    {type:'road',dir:-1,spd:2.0,tag:'ZPL',col:'#a855f7',icon:'zpl',dark:'#2e1065',count:3},
+    {type:'road',dir:1,spd:3.5,tag:'ZPL',col:'#a855f7',icon:'zpl',dark:'#2e1065',count:2},{type:'start'}
+  ]},
+  {name:'Rightmove',tag:'RMV',num:'03',color:'#00DEB6',dark:'#000433',textCol:'#7ffaea',
+   tagline:'The big one. Make it fall.',winLine:'You cracked Rightmove. The listing is free.',
+   rows:[
+    {type:'goal'},{type:'road',dir:1,spd:3.5,tag:'RMV',col:'#00DEB6',icon:'rm',dark:'#000433',count:3},
+    {type:'road',dir:-1,spd:4.0,tag:'RMV',col:'#00DEB6',icon:'rm',dark:'#000433',count:4},
+    {type:'road',dir:1,spd:3.2,tag:'RMV',col:'#00DEB6',icon:'rm',dark:'#000433',count:3},
+    {type:'road',dir:-1,spd:4.5,tag:'RMV',col:'#00DEB6',icon:'rm',dark:'#000433',count:3},
+    {type:'road',dir:1,spd:2.8,tag:'RMV',col:'#00DEB6',icon:'rm',dark:'#000433',count:4},
+    {type:'road',dir:-1,spd:3.8,tag:'RMV',col:'#00DEB6',icon:'rm',dark:'#000433',count:3},
+    {type:'road',dir:1,spd:4.2,tag:'RMV',col:'#00DEB6',icon:'rm',dark:'#000433',count:4},
+    {type:'road',dir:-1,spd:3.0,tag:'RMV',col:'#00DEB6',icon:'rm',dark:'#000433',count:3},{type:'start'}
+  ]}
+];
+
+function crossInitLevel(){
+  CROSS_CW=CROSS_W/CROSS_COLS; CROSS_CH=CROSS_H/CROSS_ROWS;
+  var L=CROSS_LEVELS[crossLevel];
+  crossP={col:3,row:9,tc:3,tr:9,ax:3*CROSS_CW+CROSS_CW/2,ay:9*CROSS_CH+CROSS_CH/2,moving:false,ht:0,hh:0,inv:0};
+  crossFlash=0; crossVehs=[];
+  var rows=L.rows;
+  for(var r=0;r<CROSS_ROWS;r++){
+    var row=rows[r]; if(row.type!=='road')continue;
+    var n=row.count||2;
+    for(var i=0;i<n;i++){
+      crossVehs.push({r:r,x:(i/n)+(Math.random()-0.5)*0.12,w:CROSS_CW*1.85,h:CROSS_CH*0.66,
+        dir:row.dir,spd:row.spd,tag:row.tag,col:row.col,dark:row.dark,icon:row.icon});
+    }
+  }
+  crossUpdateHUD();
+  var badge=document.getElementById('cross-level-badge');
+  if(badge){badge.textContent='Level '+L.num+' — '+L.name;badge.style.background=L.dark;badge.style.color=L.color;badge.style.border='1px solid '+L.color;}
+  var ol=document.getElementById('cross-dead-overlay');if(ol)ol.style.display='none';
+}
+
+function crossUpdateHUD(){
+  var t=document.getElementById('cross-time');
+  if(t){t.textContent=Math.ceil(crossTimeLeft);t.className='stat-n'+(crossTimeLeft<=10?' red':'');}
+  var lv=document.getElementById('cross-lv');if(lv)lv.textContent=(crossLevel+1)+'/3';
+  for(var i=0;i<3;i++){var h=document.getElementById('crh'+i);if(h)h.className='ark-heart-emoji'+(i>=crossLives?' dead':'');}
+}
+
+function crossHop(d){
+  if(crossState!=='playing'||crossP.moving)return;
+  var nc=crossP.col,nr=crossP.row;
+  if(d==='u')nr--;
+  if(d==='l')nc=Math.max(0,nc-1);
+  if(d==='r')nc=Math.min(CROSS_COLS-1,nc+1);
+  if(nr<0)return;
+  crossP.tc=nc;crossP.tr=nr;crossP.moving=true;crossP.ht=0;
+  if(nr===0)setTimeout(function(){crossLevelComplete();},350);
+}
+
+function crossLevelComplete(){
+  crossState='levelclear';cancelAnimationFrame(crossRAF);
+  if(crossLevel===2){crossEndGame('win');return;}
+  crossLevel++;
+  var L=CROSS_LEVELS[crossLevel];
+  var ol=document.getElementById('cross-dead-overlay');
+  if(ol){
+    ol.style.display='flex';
+    document.getElementById('cross-dead-title').textContent=CROSS_LEVELS[crossLevel-1].name+' — CLEARED ✓';
+    document.getElementById('cross-dead-title').style.color='#22c55e';
+    document.getElementById('cross-dead-sub').innerHTML=CROSS_LEVELS[crossLevel-1].winLine+'<br/><br/>Up next: <strong style="color:#fff">'+L.name+'</strong> — '+L.tagline+'<br/>Lives: <strong style="color:#fff">'+crossLives+'</strong>';
+    var btns=ol.querySelectorAll('button');
+    if(btns[0]){btns[0].textContent='Cross '+L.name;btns[0].style.background=L.color;btns[0].onclick=function(){crossBeginLevel();};}
+    if(btns[1])btns[1].style.display='none';
+  }
+}
+
+function crossBeginLevel(){
+  crossInitLevel();
+  crossTimeLeft=60-(crossLevel*5);
+  var ol=document.getElementById('cross-dead-overlay');if(ol)ol.style.display='none';
+  crossState='playing';crossRAF=requestAnimationFrame(crossTick);
+}
+
+function crossDrawBrandIcon(iconKey,cx2,ix,iy,sz){
+  var s=sz||10;
+  var img=crossIcons[iconKey];
+  if(img&&img.complete&&img.naturalWidth>0){
+    cx2.save();
+    cx2.fillStyle='#fff';cx2.beginPath();cx2.arc(ix,iy,s,0,Math.PI*2);cx2.fill();
+    cx2.beginPath();cx2.arc(ix,iy,s*0.9,0,Math.PI*2);cx2.clip();
+    cx2.drawImage(img,ix-s*0.9,iy-s*0.9,s*1.8,s*1.8);
+    cx2.restore();
+  } else {
+    cx2.fillStyle='rgba(255,255,255,0.3)';cx2.beginPath();cx2.arc(ix,iy,s,0,Math.PI*2);cx2.fill();
+    cx2.fillStyle='#fff';cx2.font='bold '+Math.round(s)+'px Arial';
+    cx2.textAlign='center';cx2.textBaseline='middle';cx2.fillText(iconKey.toUpperCase(),ix,iy);
+  }
+}
+
+function crossDrawScene(){
+  var rows=CROSS_LEVELS[crossLevel].rows;
+  for(var r=0;r<CROSS_ROWS;r++){
+    var row=rows[r],y=r*CROSS_CH;
+    if(row.type==='goal'){
+      var gg=crossCX.createLinearGradient(0,y,0,y+CROSS_CH);
+      gg.addColorStop(0,'#0a2a5e');gg.addColorStop(1,'#0d1f3c');
+      crossCX.fillStyle=gg;crossCX.fillRect(0,y,CROSS_W,CROSS_CH);
+      crossCX.shadowColor='#4DA3FF';crossCX.shadowBlur=12;
+      crossCX.strokeStyle='rgba(30,111,255,0.8)';crossCX.lineWidth=2;
+      crossCX.beginPath();crossCX.moveTo(0,y+CROSS_CH);crossCX.lineTo(CROSS_W,y+CROSS_CH);crossCX.stroke();
+      crossCX.shadowBlur=0;
+      crossCX.fillStyle='rgba(77,163,255,0.85)';crossCX.font='bold 10px Arial';
+      crossCX.textAlign='center';crossCX.textBaseline='middle';
+      crossCX.fillText('✶  AI DISCOVERY  ✶',CROSS_W/2,y+CROSS_CH/2);
+    } else if(row.type==='start'){
+      crossCX.fillStyle='#0d1f3c';crossCX.fillRect(0,y,CROSS_W,CROSS_CH);
+      crossCX.strokeStyle='rgba(77,163,255,0.3)';crossCX.lineWidth=2;
+      crossCX.beginPath();crossCX.moveTo(0,y);crossCX.lineTo(CROSS_W,y);crossCX.stroke();
+      crossCX.fillStyle='rgba(255,255,255,0.1)';crossCX.font='9px Arial';
+      crossCX.textAlign='center';crossCX.textBaseline='middle';
+      crossCX.fillText('↑ TAP TO CROSS',CROSS_W/2,y+CROSS_CH/2);
+    } else if(row.type==='safe'){
+      crossCX.fillStyle='#0c2040';crossCX.fillRect(0,y,CROSS_W,CROSS_CH);
+      crossCX.fillStyle='rgba(34,197,94,0.06)';crossCX.fillRect(0,y,CROSS_W,CROSS_CH);
+      crossCX.strokeStyle='rgba(34,197,94,0.15)';crossCX.lineWidth=1;
+      crossCX.beginPath();crossCX.moveTo(0,y);crossCX.lineTo(CROSS_W,y);crossCX.stroke();
+      crossCX.beginPath();crossCX.moveTo(0,y+CROSS_CH);crossCX.lineTo(CROSS_W,y+CROSS_CH);crossCX.stroke();
+      crossCX.fillStyle='rgba(34,197,94,0.25)';crossCX.font='8px Arial';
+      crossCX.textAlign='center';crossCX.textBaseline='middle';
+      crossCX.fillText('SAFE',CROSS_W/2,y+CROSS_CH/2);
+    } else {
+      crossCX.fillStyle='#0f1a2e';crossCX.fillRect(0,y,CROSS_W,CROSS_CH);
+      crossCX.strokeStyle='rgba(255,255,255,0.05)';crossCX.lineWidth=1;
+      crossCX.beginPath();crossCX.moveTo(0,y);crossCX.lineTo(CROSS_W,y);crossCX.stroke();
+      crossCX.beginPath();crossCX.moveTo(0,y+CROSS_CH);crossCX.lineTo(CROSS_W,y+CROSS_CH);crossCX.stroke();
+    }
+  }
+}
+
+function crossDrawVehs(){
+  for(var i=0;i<crossVehs.length;i++){
+    var v=crossVehs[i];
+    var vy=v.r*CROSS_CH,vx=v.x*CROSS_W-v.w/2,midy=vy+(CROSS_CH-v.h)/2;
+    crossCX.fillStyle='rgba(0,0,0,0.22)';crossCX.fillRect(vx+3,midy+3,v.w,v.h);
+    crossCX.fillStyle=v.dark;crossCX.beginPath();crossCX.roundRect(vx,midy,v.w,v.h,4);crossCX.fill();
+    crossCX.fillStyle=v.col;crossCX.beginPath();crossCX.roundRect(vx,midy,v.w,v.h*0.32,[4,4,0,0]);crossCX.fill();
+    crossCX.fillStyle='rgba(255,255,255,0.1)';crossCX.fillRect(vx+4,midy+2,v.w-8,v.h*0.09);
+    crossCX.shadowColor=v.col;crossCX.shadowBlur=5;
+    crossCX.strokeStyle=v.col;crossCX.lineWidth=1.5;
+    crossCX.beginPath();crossCX.roundRect(vx,midy,v.w,v.h,4);crossCX.stroke();
+    crossCX.shadowBlur=0;
+    var iconX=vx+v.h*0.4+2,iconY=midy+v.h/2;
+    crossDrawBrandIcon(v.icon,crossCX,iconX,iconY,v.h*0.38);
+    crossCX.fillStyle='#fff';crossCX.font='bold 7px Arial';
+    crossCX.textAlign='left';crossCX.textBaseline='middle';
+    crossCX.fillText(v.tag,iconX+v.h*0.5,iconY);
+    var lx=v.dir>0?vx+v.w-4:vx+4;
+    crossCX.fillStyle=v.dir>0?'rgba(254,240,138,0.9)':'rgba(252,165,165,0.9)';
+    crossCX.beginPath();crossCX.arc(lx,midy+v.h*0.24,2,0,Math.PI*2);crossCX.fill();
+    crossCX.beginPath();crossCX.arc(lx,midy+v.h*0.76,2,0,Math.PI*2);crossCX.fill();
+  }
+}
+
+function crossDrawPlayer(){
+  var P=crossP;
+  if(P.moving){
+    P.ht+=0.15;if(P.ht>=1){P.ht=1;P.moving=false;P.col=P.tc;P.row=P.tr;}
+    P.ax+=(P.tc*CROSS_CW+CROSS_CW/2-P.ax)*0.3;P.ay+=(P.tr*CROSS_CH+CROSS_CH/2-P.ay)*0.3;
+    P.hh=Math.sin(P.ht*Math.PI)*18;
+  } else {P.ax=P.col*CROSS_CW+CROSS_CW/2;P.ay=P.row*CROSS_CH+CROSS_CH/2;P.hh=0;}
+  var px=P.ax,py=P.ay-P.hh;
+  var alpha=(P.inv>0&&Math.floor(P.inv/6)%2===0)?0.2:1;
+  crossCX.globalAlpha=alpha;
+  var ss=Math.max(0.3,1-P.hh/36);
+  crossCX.fillStyle='rgba(0,0,0,0.22)';crossCX.beginPath();
+  crossCX.ellipse(P.ax,P.ay+3,14*ss,4*ss,0,0,Math.PI*2);crossCX.fill();
+  crossCX.fillStyle='#92400e';crossCX.fillRect(px-2,py+14,4,18);
+  var bw=32,bh=22,bx=px-16,by=py-6;
+  crossCX.fillStyle='rgba(0,0,0,0.22)';crossCX.beginPath();crossCX.roundRect(bx+2,by+2,bw,bh,3);crossCX.fill();
+  crossCX.fillStyle='#f8fafc';crossCX.beginPath();crossCX.roundRect(bx,by,bw,bh,3);crossCX.fill();
+  crossCX.fillStyle='#1d4ed8';crossCX.beginPath();crossCX.roundRect(bx,by,bw,bh*0.38,[3,3,0,0]);crossCX.fill();
+  crossCX.fillStyle='#fff';crossCX.font='bold 6px Arial';crossCX.textAlign='center';crossCX.textBaseline='middle';
+  crossCX.fillText('FOR SALE',px,by+bh*0.19);
+  crossCX.fillStyle='#374151';crossCX.font='4px Arial';crossCX.fillText('01234 567890',px,by+bh*0.62);
+  crossCX.strokeStyle='#1d4ed8';crossCX.lineWidth=1.5;crossCX.beginPath();crossCX.roundRect(bx,by,bw,bh,3);crossCX.stroke();
+  if(P.inv>0){
+    crossCX.shadowColor='#4DA3FF';crossCX.shadowBlur=14;crossCX.strokeStyle='#4DA3FF';crossCX.lineWidth=2;
+    crossCX.beginPath();crossCX.roundRect(bx-3,by-3,bw+6,bh+6,5);crossCX.stroke();crossCX.shadowBlur=0;
+  }
+  crossCX.globalAlpha=1;
+}
+
+function crossCheckHits(){
+  var P=crossP;if(P.inv>0)return;
+  var rows=CROSS_LEVELS[crossLevel].rows;if(rows[P.row].type!=='road')return;
+  var sx=P.ax,sy=P.ay-P.hh-6,hw=14,hh=10;
+  for(var i=0;i<crossVehs.length;i++){
+    var v=crossVehs[i];if(v.r!==P.row)continue;
+    var vx=v.x*CROSS_W,vy=v.r*CROSS_CH+CROSS_CH/2;
+    if(Math.abs(sx-vx)<(v.w/2+hw-2)&&Math.abs(sy-vy)<(CROSS_CH/2)){
+      crossFlash=22;crossLives--;P.inv=130;
+      if(P.row<9){P.row++;P.tr=P.row;}
+      P.ay=P.row*CROSS_CH+CROSS_CH/2;P.ax=P.col*CROSS_CW+CROSS_CW/2;
+      crossUpdateHUD();
+      if(crossLives<=0){crossEndGame('dead');return;}
+    }
+  }
+}
+
+function crossTick(){
+  if(crossState!=='playing')return;
+  crossFnum++;crossTimeLeft-=1/60;
+  if(crossTimeLeft<=0){crossTimeLeft=0;crossEndGame('dead');return;}
+  for(var i=0;i<crossVehs.length;i++){
+    var v=crossVehs[i];
+    v.x+=v.dir*(v.spd/CROSS_W)*0.78;
+    if(v.dir>0&&v.x*CROSS_W>CROSS_W+v.w/2)v.x=(-v.w/2)/CROSS_W;
+    if(v.dir<0&&v.x*CROSS_W<-v.w/2)v.x=(CROSS_W+v.w/2)/CROSS_W;
+  }
+  var P=crossP;if(P.inv>0)P.inv--;
+  crossCheckHits();crossUpdateHUD();
+  crossCX.clearRect(0,0,CROSS_W,CROSS_H);
+  crossDrawScene();crossDrawVehs();crossDrawPlayer();
+  if(crossFlash>0){crossCX.fillStyle='rgba(239,68,68,'+(crossFlash/22*0.45)+')';crossCX.fillRect(0,0,CROSS_W,CROSS_H);crossFlash--;}
+  // Progress bar
+  var pct=Math.max(0,(9-P.row)/9);
+  crossCX.fillStyle='rgba(255,255,255,0.04)';crossCX.fillRect(0,CROSS_H-4,CROSS_W,4);
+  crossCX.fillStyle=CROSS_LEVELS[crossLevel].color;crossCX.fillRect(0,CROSS_H-4,CROSS_W*pct,4);
+  if(crossTimeLeft<=10){
+    crossCX.globalAlpha=0.5+Math.sin(crossFnum*0.28)*0.5;
+    crossCX.fillStyle='#ef4444';crossCX.font='bold 10px Arial';
+    crossCX.textAlign='center';crossCX.textBaseline='middle';
+    crossCX.fillText('ALMOST OUT OF TIME!',CROSS_W/2,CROSS_H-16);crossCX.globalAlpha=1;
+  }
+  crossRAF=requestAnimationFrame(crossTick);
+}
+
+function crossEndGame(result){
+  crossState=result;cancelAnimationFrame(crossRAF);
+  if(result==='dead'){
+    var L=CROSS_LEVELS[crossLevel];
+    var ol=document.getElementById('cross-dead-overlay');
+    if(ol){
+      ol.style.display='flex';
+      var title=document.getElementById('cross-dead-title');
+      if(title){title.textContent='BLOCKED BY '+L.name.toUpperCase();title.style.color='#ef4444';}
+      var sub=document.getElementById('cross-dead-sub');
+      if(sub)sub.textContent=L.tagline+'. Your listing could not break through.';
+      var btns=ol.querySelectorAll('button');
+      if(btns[0]){btns[0].textContent='TRY AGAIN';btns[0].style.background='#ef4444';btns[0].onclick=function(){crossRestart();};}
+      if(btns[1]){btns[1].style.display='';btns[1].onclick=function(){crossStartOver();};}
+    }
+  } else {
+    var elapsed=Date.now()-crossT0;
+    var lbScore=crossLives*100+Math.floor(elapsed/100);
+    saveScore(elapsed,lbScore,'cross',crossLives).then(function(){
+      finishGame(elapsed,lbScore,'cross',crossLives);
+    }).catch(function(){
+      finishGame(elapsed,lbScore,'cross',crossLives);
+    });
+  }
+}
+
+function crossRestart(){
+  crossInitLevel();crossTimeLeft=60-(crossLevel*5);
+  var ol=document.getElementById('cross-dead-overlay');if(ol)ol.style.display='none';
+  crossState='playing';crossRAF=requestAnimationFrame(crossTick);
+}
+
+function crossStartOver(){
+  crossLevel=0;crossLives=3;crossInitLevel();crossTimeLeft=60;
+  var ol=document.getElementById('cross-dead-overlay');if(ol)ol.style.display='none';
+  crossState='playing';crossRAF=requestAnimationFrame(crossTick);
+}
+
+function crossQuit(){
+  cancelAnimationFrame(crossRAF);crossState='idle';
+  document.getElementById('pname').value='';
+  document.getElementById('bgo').disabled=true;
+  show('s-land');
+}
+
+function startCrossy(){
+  crossCV=document.getElementById('cross-cv');
+  crossCX=crossCV.getContext('2d');
+  CROSS_CW=CROSS_W/CROSS_COLS;CROSS_CH=CROSS_H/CROSS_ROWS;
+  if(!crossCV._listenersAdded){
+    document.getElementById('cross-tap-up').addEventListener('click',function(){crossHop('u');});
+    document.getElementById('cross-tap-left').addEventListener('click',function(){crossHop('l');});
+    document.getElementById('cross-tap-right').addEventListener('click',function(){crossHop('r');});
+    window.addEventListener('keydown',function(e){
+      if(crossState!=='playing')return;
+      if(e.key==='ArrowUp'||e.key==='w'){e.preventDefault();crossHop('u');}
+      if(e.key==='ArrowLeft'||e.key==='a'){e.preventDefault();crossHop('l');}
+      if(e.key==='ArrowRight'||e.key==='d'){e.preventDefault();crossHop('r');}
+    });
+    crossCV._listenersAdded=true;
+  }
+  crossLevel=0;crossLives=3;crossTimeLeft=60;crossFnum=0;
+  crossT0=Date.now();
+  crossInitLevel();
+  show('s-cross');
+  crossState='playing';crossRAF=requestAnimationFrame(crossTick);
+}
+
+</script>
+</body>
+</html>

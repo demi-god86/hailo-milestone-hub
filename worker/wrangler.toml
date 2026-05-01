@@ -1,0 +1,8 @@
+name = "hailo-milestone"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+account_id = "0488465e5cb728431b50ff1f9e5c62b0"
+
+[[kv_namespaces]]
+binding = "HAILO_KV"
+id = "4a1dfe78d6084c6eac617e3906af6bcb"

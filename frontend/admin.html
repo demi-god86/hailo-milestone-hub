@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hailo — Admin</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { min-height:100vh; background:#0A1628; font-family:Arial,sans-serif; color:#fff; }
+.header { background:#0D1F3C; border-bottom:1px solid rgba(77,163,255,0.2); padding:1rem 2rem; display:flex; align-items:center; justify-content:space-between; }
+.header-logo { font-size:18px; font-weight:900; letter-spacing:4px; color:#fff; }
+.header-logo span { color:#4DA3FF; }
+.header-tag { font-size:11px; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2px; }
+.wrap { max-width:680px; margin:0 auto; padding:2rem 1.5rem; }
+.section-title { font-size:11px; font-weight:700; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:3px; margin-bottom:1rem; margin-top:2rem; }
+.section-title:first-child { margin-top:0; }
+
+/* Milestone cards */
+.m-card { background:#0D1F3C; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:1.25rem; margin-bottom:10px; }
+.m-card-top { display:flex; align-items:center; gap:1rem; }
+.m-icon { width:40px; height:40px; border-radius:50%; background:rgba(30,111,255,0.15); border:1px solid rgba(77,163,255,0.3); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.m-info { flex:1; }
+.m-cat { font-size:15px; font-weight:700; color:#fff; }
+.m-meta { font-size:12px; color:rgba(255,255,255,0.4); margin-top:2px; }
+.m-actions { display:flex; gap:8px; align-items:center; }
+.toggle { position:relative; width:44px; height:24px; }
+.toggle input { opacity:0; width:0; height:0; position:absolute; }
+.toggle-track { position:absolute; inset:0; background:rgba(255,255,255,0.15); border-radius:12px; cursor:pointer; transition:background 0.2s; }
+.toggle input:checked + .toggle-track { background:#1E6FFF; }
+.toggle-track::after { content:""; position:absolute; width:18px; height:18px; background:#fff; border-radius:50%; top:3px; left:3px; transition:transform 0.2s; }
+.toggle input:checked + .toggle-track::after { transform:translateX(20px); }
+.toggle-label { font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:1px; }
+.btn-edit { padding:6px 14px; border-radius:50px; background:transparent; border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.6); font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; font-family:inherit; }
+.btn-edit:hover { border-color:rgba(255,255,255,0.5); color:#fff; }
+.btn-delete { padding:6px 14px; border-radius:50px; background:transparent; border:1px solid rgba(239,68,68,0.3); color:rgba(239,68,68,0.6); font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; font-family:inherit; }
+.btn-delete:hover { border-color:#ef4444; color:#ef4444; }
+.btn-reset { padding:6px 14px; border-radius:50px; background:transparent; border:1px solid rgba(251,191,36,0.3); color:rgba(251,191,36,0.6); font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; font-family:inherit; }
+.btn-reset:hover { border-color:#fbbf24; color:#fbbf24; }
+.btn-reset { padding:6px 14px; border-radius:50px; background:transparent; border:1px solid rgba(251,191,36,0.3); color:rgba(251,191,36,0.6); font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; font-family:inherit; }
+.btn-reset:hover { border-color:#fbbf24; color:#fbbf24; }
+
+/* Edit panel */
+.edit-panel { margin-top:1rem; border-top:1px solid rgba(255,255,255,0.08); padding-top:1rem; display:none; }
+.edit-panel.open { display:block; }
+.edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.field { display:flex; flex-direction:column; gap:5px; }
+.field.full { grid-column:1/-1; }
+.field label { font-size:11px; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:1px; }
+.field input, .field select { padding:10px 14px; border-radius:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; font-size:14px; font-family:inherit; outline:none; transition:border-color 0.15s; }
+.field input:focus, .field select:focus { border-color:#4DA3FF; }
+.field select option { background:#0D1F3C; color:#fff; }
+.btn-save { margin-top:12px; padding:10px 24px; border-radius:50px; background:#1E6FFF; border:none; color:#fff; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; box-shadow:0 0 16px rgba(30,111,255,0.4); transition:box-shadow 0.15s; }
+.btn-save:hover { box-shadow:0 0 28px rgba(30,111,255,0.8); }
+.btn-cancel { margin-top:12px; margin-left:8px; padding:10px 24px; border-radius:50px; background:transparent; border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.6); font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; }
+
+/* Add new form */
+.add-card { background:#0D1F3C; border:1px solid rgba(77,163,255,0.25); border-radius:12px; padding:1.5rem; }
+.add-title { font-size:14px; font-weight:700; color:#4DA3FF; margin-bottom:1rem; }
+
+/* Status messages */
+.toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#1E6FFF; color:#fff; padding:12px 24px; border-radius:50px; font-size:14px; font-weight:700; box-shadow:0 0 24px rgba(30,111,255,0.5); opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:100; }
+.toast.show { opacity:1; }
+.toast.error { background:#ef4444; }
+
+/* Loading */
+.loading { display:flex; align-items:center; gap:10px; padding:2rem 0; color:rgba(255,255,255,0.4); font-size:14px; }
+.spinner { width:20px; height:20px; border-radius:50%; border:2px solid rgba(77,163,255,0.2); border-top-color:#4DA3FF; animation:spin 0.7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.game-badge { display:inline-block; font-size:10px; font-weight:700; padding:2px 8px; border-radius:50px; text-transform:uppercase; letter-spacing:1px; margin-left:6px; vertical-align:middle; }
+.game-badge.sliding { background:rgba(30,111,255,0.2); color:#4DA3FF; border:1px solid rgba(77,163,255,0.3); }
+.game-badge.arkanoid { background:rgba(168,85,247,0.2); color:#c084fc; border:1px solid rgba(168,85,247,0.3); }
+.game-badge.scramble { background:rgba(34,197,94,0.2); color:#4ade80; border:1px solid rgba(34,197,94,0.3); }
+.game-badge.safe { background:rgba(251,191,36,0.2); color:#fbbf24; border:1px solid rgba(251,191,36,0.3); }
+.game-badge.runner { background:rgba(34,197,94,0.2); color:#4ade80; border:1px solid rgba(34,197,94,0.3); }
+.game-badge.crossy { background:rgba(244,124,106,0.2); color:#f47c6a; border:1px solid rgba(244,124,106,0.3); }
+.live-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e; margin-right:4px; vertical-align:middle; }
+.off-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.2); margin-right:4px; vertical-align:middle; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">HAIL<span>O</span> <span style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-left:8px;">Admin</span></div>
+  <div class="header-tag"><a href="index.html" style="color:rgba(255,255,255,0.3);text-decoration:none;">← Back to Hub</a></div>
+</div>
+
+<div class="wrap">
+
+  <div class="section-title">Milestones</div>
+  <div id="milestone-list">
+    <div class="loading"><div class="spinner"></div> Loading milestones...</div>
+  </div>
+
+  <div class="section-title" style="margin-top:2.5rem;">Add New Milestone</div>
+  <div class="add-card">
+    <div class="add-title">New milestone</div>
+    <div class="edit-grid">
+      <div class="field">
+        <label>Category (shown on hub)</label>
+        <input type="text" id="new-category" placeholder="e.g. Live Listings"/>
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="new-date"/>
+      </div>
+      <div class="field">
+        <label>Number / Value</label>
+        <input type="text" id="new-number" placeholder="e.g. 250,000"/>
+      </div>
+      <div class="field">
+        <label>Label</label>
+        <input type="text" id="new-label" placeholder="e.g. Live Listings"/>
+      </div>
+      <div class="field">
+        <label>Game Type</label>
+        <select id="new-game">
+          <option value="sliding">Sliding Puzzle</option>
+          <option value="arkanoid">Arkanoid</option>
+          <option value="runner">Portal Escape</option>
+          <option value="crossy">Crossy Listing</option>
+          <option value="scramble">Number Scramble</option>
+          <option value="safe">Crack the Safe</option>
+        </select>
+      </div>
+      <div class="field full">
+        <label>CTA Button Text</label>
+        <input type="text" id="new-cta" placeholder="e.g. Crack It, Smash It, Unlock It"/>
+      </div>
+      <div class="field" style="justify-content:flex-end;flex-direction:row;align-items:flex-end;gap:8px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.6);">
+          <input type="checkbox" id="new-active" style="width:16px;height:16px;cursor:pointer;accent-color:#1E6FFF;"/>
+          Live immediately
+        </label>
+      </div>
+    </div>
+    <button class="btn-save" onclick="addMilestone()">Add Milestone</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var CF_URL='https://hailo-milestone.demi-048.workers.dev/data';
+var _data=null;
+
+function toast(msg,err){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast'+(err?' error':'')+' show';
+  setTimeout(function(){t.className='toast'+(err?' error':'');},2500);
+}
+
+async function load(){
+  try{
+    var r=await fetch(CF_URL);
+    var j=await r.json();
+    _data=j;
+    render();
+  }catch(e){
+    document.getElementById('milestone-list').innerHTML='<div style="color:rgba(239,68,68,0.8);padding:1rem;">Could not load data.</div>';
+  }
+}
+
+async function save(){
+  await fetch(CF_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(_data)});
+}
+
+function fmtDate(s){
+  if(!s)return'—';
+  var d=new Date(s);
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+}
+
+function genId(category,date){
+  return category.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')+'-'+date.replace(/-/g,'').slice(0,6);
+}
+
+function render(){
+  var ms=(_data.milestones||[]).slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  var list=document.getElementById('milestone-list');
+  if(!ms.length){list.innerHTML='<div style="color:rgba(255,255,255,0.3);padding:1rem;">No milestones yet.</div>';return;}
+  list.innerHTML='';
+  ms.forEach(function(m){
+    var card=document.createElement('div');
+    card.className='m-card';
+    card.id='card-'+m.id;
+    card.innerHTML=
+      '<div class="m-card-top">'+
+        '<div class="m-icon">'+(m.active?'🔒':'💤')+'</div>'+
+        '<div class="m-info">'+
+          '<div class="m-cat">'+m.category+
+            '<span class="game-badge '+m.game+'">'+m.game+'</span>'+
+          '</div>'+
+          '<div class="m-meta">'+
+            '<span class="'+(m.active?'live-dot':'off-dot')+'"></span>'+
+            (m.active?'<span style="color:#22c55e">Live</span>':'<span style="color:rgba(255,255,255,0.3)">Off</span>')+
+            ' &nbsp;·&nbsp; '+fmtDate(m.date)+
+            ' &nbsp;·&nbsp; '+m.number+' '+m.label+
+          '</div>'+
+        '</div>'+
+        '<div class="m-actions">'+
+          '<label class="toggle" title="Toggle live">'+
+            '<input type="checkbox" '+(m.active?'checked':'')+' onchange="toggleActive(\''+m.id+'\',this.checked)"/>'+
+            '<div class="toggle-track"></div>'+
+          '</label>'+
+          '<button class="btn-edit" onclick="openEdit(\''+m.id+'\')">Edit</button>'+
+          '<button class="btn-reset" onclick="resetScores(\''+m.id+'\')">Reset Scores</button>'+
+          '<button class="btn-delete" onclick="deleteMilestone(\''+m.id+'\')">Delete</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="edit-panel" id="edit-'+m.id+'">'+
+        '<div class="edit-grid">'+
+          '<div class="field"><label>Category</label><input id="ec-'+m.id+'" value="'+m.category+'"/></div>'+
+          '<div class="field"><label>Date</label><input type="date" id="ed-'+m.id+'" value="'+m.date+'"/></div>'+
+          '<div class="field"><label>Number</label><input id="en-'+m.id+'" value="'+m.number+'"/></div>'+
+          '<div class="field"><label>Label</label><input id="el-'+m.id+'" value="'+m.label+'"/></div>'+
+          '<div class="field full"><label>Game Type</label>'+
+            '<select id="eg-'+m.id+'">'+
+              ['sliding','arkanoid','runner','crossy','scramble','safe'].map(function(g){return'<option value="'+g+'"'+(m.game===g?' selected':'')+'>'+g+'</option>';}).join('')+
+            '</select>'+
+          '</div>'+
+          '<div class="field full"><label>CTA Button Text</label>'+
+            '<input id="ecta-'+m.id+'" value="'+(m.cta||'Crack It')+'"/>'+
+          '</div>'+
+        '</div>'+
+        '<button class="btn-save" onclick="saveEdit(\''+m.id+'\')">Save Changes</button>'+
+        '<button class="btn-cancel" onclick="closeEdit(\''+m.id+'\')">Cancel</button>'+
+      '</div>';
+    list.appendChild(card);
+  });
+}
+
+function openEdit(id){
+  document.querySelectorAll('.edit-panel').forEach(function(p){p.classList.remove('open');});
+  document.getElementById('edit-'+id).classList.add('open');
+}
+function closeEdit(id){ document.getElementById('edit-'+id).classList.remove('open'); }
+
+async function toggleActive(id,val){
+  var m=_data.milestones.find(function(x){return x.id===id;});
+  if(!m)return;
+  m.active=val;
+  try{ await save(); toast(val?'Milestone is now live':'Milestone switched off'); render(); }
+  catch(e){ toast('Save failed',true); }
+}
+
+async function saveEdit(id){
+  var m=_data.milestones.find(function(x){return x.id===id;});
+  if(!m)return;
+  m.category=document.getElementById('ec-'+id).value.trim();
+  m.date=document.getElementById('ed-'+id).value;
+  m.number=document.getElementById('en-'+id).value.trim();
+  m.label=document.getElementById('el-'+id).value.trim();
+  m.game=document.getElementById('eg-'+id).value;
+  m.cta=document.getElementById('ecta-'+id).value.trim()||'Crack It';
+  try{ await save(); toast('Saved!'); render(); }
+  catch(e){ toast('Save failed',true); }
+}
+
+async function resetScores(id){
+  var m=_data.milestones.find(function(x){return x.id===id;});
+  if(!m)return;
+  var label=m.category||id;
+  if(!confirm('Reset ALL scores for "'+label+'"? This cannot be undone.'))return;
+  if(!_data.scores)_data.scores={};
+  // Remove all score keys for this milestone
+  Object.keys(_data.scores).forEach(function(k){
+    if(k.startsWith('scores_'+id+'_'))delete _data.scores[k];
+  });
+  try{await save();toast('Scores reset for '+label);}
+  catch(e){toast('Reset failed',true);}
+}
+
+async function resetScores(id){
+  var m=_data.milestones.find(function(x){return x.id===id;});
+  if(!m)return;
+  var label=m.category||id;
+  if(!confirm('Reset ALL scores for "'+label+'"? This cannot be undone.'))return;
+  if(!_data.scores)_data.scores={};
+  Object.keys(_data.scores).forEach(function(k){
+    if(k.startsWith('scores_'+id+'_'))delete _data.scores[k];
+  });
+  try{await save();toast('Scores reset for '+label);}
+  catch(e){toast('Reset failed',true);}
+}
+
+async function deleteMilestone(id){
+  if(!confirm('Delete this milestone? This cannot be undone.'))return;
+  _data.milestones=_data.milestones.filter(function(m){return m.id!==id;});
+  try{ await save(); toast('Deleted'); render(); }
+  catch(e){ toast('Delete failed',true); }
+}
+
+async function addMilestone(){
+  var cat=document.getElementById('new-category').value.trim();
+  var date=document.getElementById('new-date').value;
+  var num=document.getElementById('new-number').value.trim();
+  var lbl=document.getElementById('new-label').value.trim();
+  var game=document.getElementById('new-game').value;
+  var cta=document.getElementById('new-cta').value.trim()||'Crack It';
+  var active=document.getElementById('new-active').checked;
+  if(!cat||!date||!num||!lbl){toast('Please fill in all fields',true);return;}
+  var id=genId(cat,date);
+  if(!_data.milestones)_data.milestones=[];
+  _data.milestones.push({id:id,date:date,category:cat,number:num,label:lbl,game:game,cta:cta,active:active});
+  if(!_data.scores)_data.scores={};
+  try{
+    await save();
+    toast('Milestone added!');
+    document.getElementById('new-category').value='';
+    document.getElementById('new-date').value='';
+    document.getElementById('new-number').value='';
+    document.getElementById('new-label').value='';
+    document.getElementById('new-active').checked=false;
+    document.getElementById('new-cta').value='';
+    render();
+  }catch(e){toast('Save failed',true);}
+}
+
+// Set today's date as default
+document.getElementById('new-date').valueAsDate=new Date();
+load();
+</script>
+</body>
+</html>

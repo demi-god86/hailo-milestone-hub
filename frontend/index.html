@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet"/>
+<title>Hailo — Milestone Hub</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { min-height:100vh; background:#0A1628; font-family:Arial,sans-serif; }
+body { display:flex; flex-direction:column; align-items:center; }
+.hero { width:100%; max-width:600px; padding:3rem 2rem 2rem; display:flex; flex-direction:column; align-items:center; gap:1.2rem; position:relative; overflow:hidden; }
+.hero-glow { position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(30,111,255,0.28) 0%,transparent 65%); top:-200px; left:50%; transform:translateX(-50%); pointer-events:none; }
+.hero-logo { height:48px; width:auto; position:relative; z-index:2; }
+.hero-title { font-size:40px; font-weight:900; color:#fff; text-align:center; line-height:1.2; position:relative; z-index:2; }
+.hero-title span { color:#4DA3FF; display:block; }
+.hero-sub { font-size:14px; color:rgba(255,255,255,0.55); text-align:center; line-height:1.7; max-width:380px; position:relative; z-index:2; }
+.hero-divider { width:50px; height:3px; background:#1E6FFF; border-radius:2px; }
+.section-label { width:100%; max-width:600px; padding:0 2rem 0.75rem; font-size:11px; font-weight:700; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:2.5px; }
+.milestone-list { width:100%; max-width:600px; display:flex; flex-direction:column; padding:0 2rem 4rem; }
+/* Card */
+.card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:14px; margin-bottom:12px; cursor:pointer; transition:border-color 0.15s,background 0.15s,transform 0.1s; display:flex; align-items:stretch; text-decoration:none; color:inherit; overflow:hidden; }
+.card:hover { background:rgba(30,111,255,0.08); border-color:rgba(77,163,255,0.4); transform:translateY(-1px); }
+.card:active { transform:scale(0.99); }
+/* Date stripe */
+.date-stripe { background:rgba(30,111,255,0.2); border-right:1px solid rgba(77,163,255,0.25); padding:0 14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; min-width:56px; flex-shrink:0; }
+.ds-day { font-size:22px; font-weight:900; color:#fff; line-height:1; font-family:'Arial Black',Arial; }
+.ds-mon { font-size:10px; color:#4DA3FF; text-transform:uppercase; letter-spacing:1.5px; font-weight:700; }
+.ds-yr { font-size:9px; color:rgba(255,255,255,0.3); letter-spacing:1px; margin-top:1px; }
+/* Card inner */
+.card-inner { display:flex; align-items:center; gap:1rem; flex:1; padding:1rem 1.25rem; }
+.card-icon { width:44px; height:44px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:rgba(30,111,255,0.15); border:1px solid rgba(77,163,255,0.3); font-size:20px; }
+.card-body { flex:1; min-width:0; }
+.card-cat { font-size:16px; font-weight:700; color:#fff; margin-bottom:3px; }
+.card-players { font-size:12px; color:rgba(255,255,255,0.3); margin-top:2px; }
+.badge { display:inline-block; font-size:10px; font-weight:700; color:#4DA3FF; background:rgba(30,111,255,0.15); border:1px solid rgba(77,163,255,0.35); border-radius:50px; padding:2px 8px; margin-left:6px; letter-spacing:1px; vertical-align:middle; }
+/* CTA button — always solid blue */
+.btn { flex-shrink:0; padding:9px 20px; border-radius:50px; background:#1E6FFF; border:none; color:#fff; font-size:13px; font-weight:700; font-family:Arial,sans-serif; letter-spacing:1px; text-transform:uppercase; cursor:pointer; box-shadow:0 0 16px rgba(30,111,255,0.45); transition:box-shadow 0.15s,transform 0.1s; text-decoration:none; }
+.btn:hover { box-shadow:0 0 28px rgba(30,111,255,0.85); transform:scale(1.04); }
+.btn:active { transform:scale(0.97); }
+/* Quick reveal stripe */
+.skip-stripe { border-left:1px solid rgba(0,222,182,0.2); background:rgba(0,222,182,0.06); padding:0 13px; min-width:58px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer; transition:background 0.15s,border-color 0.15s; }
+.skip-stripe:hover { background:rgba(0,222,182,0.14); border-left-color:rgba(0,222,182,0.5); }
+.skip-stripe:active { background:rgba(0,222,182,0.22); }
+.skip-flag { font-size:15px; line-height:1; }
+.skip-txt { font-size:8px; font-weight:700; color:rgba(0,222,182,0.6); text-transform:uppercase; letter-spacing:1px; text-align:center; line-height:1.5; transition:color 0.15s; }
+.skip-stripe:hover .skip-txt { color:#00DEB6; }
+/* Reveal modal */
+#reveal-modal { display:none; position:fixed; inset:0; background:rgba(5,12,28,0.88); z-index:999; align-items:center; justify-content:center; }
+#reveal-modal.open { display:flex; }
+.rev-box { background:#0D1F3C; border:1.5px solid rgba(77,163,255,0.35); border-radius:18px; padding:2rem 2rem 1.5rem; text-align:center; width:300px; max-width:90vw; animation:revPop 0.2s ease; }
+@keyframes revPop { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
+.rev-eye { font-size:10px; color:#4DA3FF; letter-spacing:3px; text-transform:uppercase; margin-bottom:10px; font-family:Arial,sans-serif; }
+.rev-num { font-size:54px; font-weight:900; color:#fff; line-height:1; font-family:'Arial Black',Arial; }
+.rev-lbl { font-size:13px; font-weight:700; color:#4DA3FF; text-transform:uppercase; letter-spacing:3px; margin-top:6px; font-family:Arial,sans-serif; }
+.rev-hs { font-size:11px; color:rgba(255,255,255,0.3); margin-top:10px; font-family:Arial,sans-serif; }
+.rev-close { margin-top:1.5rem; padding:10px 28px; border-radius:50px; border:1.5px solid rgba(255,255,255,0.2); background:transparent; color:rgba(255,255,255,0.6); font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; font-family:Arial,sans-serif; transition:border-color 0.15s,color 0.15s; }
+.rev-close:hover { border-color:rgba(255,255,255,0.5); color:#fff; }
+/* Confetti */
+.confetti-p { position:fixed; width:8px; height:4px; border-radius:2px; pointer-events:none; z-index:1000; animation:cfall 3.5s ease-in forwards; }
+@keyframes cfall { 0%{opacity:1;transform:translateY(0) rotate(0deg);} 100%{opacity:0;transform:translateY(600px) rotate(720deg);} }
+/* Loading */
+#loading-state { text-align:center; color:rgba(255,255,255,0.3); font-size:13px; padding:2rem; }
+.empty { text-align:center; color:rgba(255,255,255,0.3); font-size:14px; padding:2rem; }
+.footer { font-size:12px; color:rgba(255,255,255,0.2); padding:2rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-glow"></div>
+  <img src="/logo.png" class="hero-logo" alt="HAILO"/>
+  <div class="hero-title">The Homesearch<span>Milestone Hub</span></div>
+  <div class="hero-sub">Every time we hit something big, it gets locked inside a puzzle. Crack it, claim your place on the leaderboard.</div>
+  <div class="hero-divider"></div>
+</div>
+
+<div class="section-label">Milestones</div>
+<div class="milestone-list" id="list">
+  <div id="loading-state">Loading milestones...</div>
+</div>
+<div class="footer">Homesearch &middot; Internal only</div>
+
+<!-- Quick reveal modal -->
+<div id="reveal-modal">
+  <div class="rev-box">
+    <div class="rev-eye">We just hit</div>
+    <div class="rev-num" id="rev-num"></div>
+    <div class="rev-lbl" id="rev-lbl"></div>
+    <div class="rev-hs">HAILO &middot; Powered by Homesearch</div>
+    <button class="rev-close" onclick="closeReveal()">Close</button>
+  </div>
+</div>
+
+<script>
+var CF_URL='https://hailo-milestone.demi-048.workers.dev/data';
+var CACHE_KEY='hailo_hub_v1';
+var CACHE_TTL=3*60*1000;
+
+function countPlayers(scores,id){
+  var keys=Object.keys(scores).filter(function(k){return k.startsWith('scores_'+id+'_');});
+  var names={};
+  keys.forEach(function(k){(scores[k]||[]).forEach(function(s){if(s.name)names[s.name]=1;});});
+  return Object.keys(names).length;
+}
+
+function fmtDate(dateStr){
+  var d=new Date(dateStr);
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function render(record){
+  var ls=document.getElementById('loading-state');if(ls)ls.style.display='none';
+  var ms=(record.milestones||[])
+    .filter(function(m){return m.active;})
+    .sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  var scores=record.scores||{};
+  var list=document.getElementById('list');
+  if(!ms.length){list.innerHTML='<div class="empty">No milestones yet — watch this space.</div>';return;}
+  list.innerHTML='';
+  ms.forEach(function(m,i){
+    var players=countPlayers(scores,m.id);
+    var isNew=i===0;
+    var a=document.createElement('a');
+    a.href='game.html?id='+encodeURIComponent(m.id);
+    a.className='card';
+    var d=new Date(m.date);
+    var dayNum=d.getDate();
+    var monStr=d.toLocaleDateString('en-GB',{month:'short'});
+    var yrStr=d.getFullYear();
+    // Build card HTML
+    var html=
+      '<div class="date-stripe">'+
+        '<div class="ds-day">'+dayNum+'</div>'+
+        '<div class="ds-mon">'+monStr+'</div>'+
+        '<div class="ds-yr">'+yrStr+'</div>'+
+      '</div>'+
+      '<div class="card-inner">'+
+        '<div class="card-icon">'+(isNew?'&#128274;':'&#9989;')+'</div>'+
+        '<div class="card-body">'+
+          '<div class="card-cat">'+m.category+(isNew?'<span class="badge">New</span>':'')+'</div>'+
+          (players?'<div class="card-players">'+players+' player'+(players!==1?'s':'')+' solved this</div>':'<div class="card-players">Be the first to crack it</div>')+
+        '</div>'+
+        '<div class="btn">'+(m.cta||'Crack It')+'</div>'+
+      '</div>';
+    // Quick reveal stripe — on every milestone card
+    html+='<div class="skip-stripe" data-num="'+encodeURIComponent(m.number||'')+'" data-lbl="'+encodeURIComponent(m.label||m.category||'')+'" onclick="event.preventDefault();event.stopPropagation();quickReveal(this)">'+
+      '<div class="skip-flag">&#127987;</div>'+
+      '<div class="skip-txt">Just<br/>tell me</div>'+
+    '</div>';
+    a.innerHTML=html;
+    list.appendChild(a);
+  });
+}
+
+function fetchFresh(callback){
+  fetch(CF_URL)
+    .then(function(r){return r.json();})
+    .then(function(j){
+      try{localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),d:j}));}catch(e){}
+      if(callback)callback(j);
+    })
+    .catch(function(){});
+}
+
+(function(){
+  try{
+    var cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
+    if(cached&&(Date.now()-cached.ts)<CACHE_TTL){
+      render(cached.d);
+      fetchFresh(function(fresh){render(fresh);});
+      return;
+    }
+  }catch(e){}
+  fetchFresh(function(data){render(data);});
+})();
+
+// Quick reveal
+function quickReveal(el){
+  var num=decodeURIComponent(el.getAttribute('data-num'));
+  var lbl=decodeURIComponent(el.getAttribute('data-lbl'));
+  document.getElementById('rev-num').textContent=num;
+  document.getElementById('rev-lbl').textContent=lbl;
+  document.getElementById('reveal-modal').classList.add('open');
+  spawnConfetti();
+}
+function closeReveal(){
+  document.getElementById('reveal-modal').classList.remove('open');
+}
+document.getElementById('reveal-modal').addEventListener('click',function(e){
+  if(e.target===this)closeReveal();
+});
+function spawnConfetti(){
+  var cols=['#1E6FFF','#4DA3FF','#fff','#22c55e','#fbbf24','#a855f7'];
+  for(var i=0;i<70;i++){
+    var el=document.createElement('div');
+    el.className='confetti-p';
+    el.style.left=(Math.random()*100)+'vw';
+    el.style.top='0';
+    el.style.background=cols[Math.floor(Math.random()*cols.length)];
+    el.style.animationDuration=(2.5+Math.random()*2)+'s';
+    el.style.animationDelay=(Math.random()*0.6)+'s';
+    document.body.appendChild(el);
+    (function(e){setTimeout(function(){if(e.parentNode)e.parentNode.removeChild(e);},5000);})(el);
+  }
+}
+</script>
+</body>
+</html>
