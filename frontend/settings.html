@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<title>Hailo — Site Settings</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:#060f1e;font-family:Arial,sans-serif;color:#fff}
+.header{background:#0a1628;border-bottom:1px solid rgba(255,255,255,0.08);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem}
+.header-logo{height:32px;width:auto}
+.header-tag{font-size:11px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:2px}
+.header-links{margin-left:auto;display:flex;gap:8px}
+.hl{font-size:12px;color:rgba(255,255,255,0.4);text-decoration:none;padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);transition:all 0.15s}
+.hl:hover{color:#fff;border-color:rgba(255,255,255,0.3)}
+.hl.active{color:#4DA3FF;border-color:rgba(77,163,255,0.4);background:rgba(30,111,255,0.1)}
+.wrap{max-width:600px;margin:0 auto;padding:2.5rem 1.5rem}
+.section-title{font-size:11px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:2px;margin-bottom:1.5rem}
+.card{background:#0D1F3C;border:1px solid rgba(77,163,255,0.2);border-radius:14px;padding:1.75rem}
+.field{margin-bottom:1.25rem}
+.field:last-of-type{margin-bottom:0}
+.field label{display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.field input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#fff;font-size:14px;font-family:Arial,sans-serif;outline:none;transition:border-color 0.15s}
+.field input:focus{border-color:rgba(77,163,255,0.5)}
+.field input::placeholder{color:rgba(255,255,255,0.2)}
+.hint{font-size:11px;color:rgba(255,255,255,0.25);margin-top:5px}
+.save-btn{margin-top:1.5rem;padding:12px 28px;border-radius:50px;border:none;background:#1E6FFF;color:#fff;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:Arial,sans-serif;box-shadow:0 0 16px rgba(30,111,255,0.4);transition:box-shadow 0.15s}
+.save-btn:hover{box-shadow:0 0 28px rgba(30,111,255,0.7)}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:#22c55e;color:#fff;padding:10px 24px;border-radius:50px;font-size:13px;font-weight:700;transition:transform 0.3s;z-index:200;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.preview{margin-top:1.5rem;padding:1.25rem;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)}
+.preview-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
+.preview-title{font-size:22px;font-weight:900;color:#fff;line-height:1.2}
+.preview-title span{color:#4DA3FF;display:block}
+.preview-sub{font-size:12px;color:rgba(255,255,255,0.4);margin-top:6px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img src="/logo.png" class="header-logo" alt="HAILO"/>
+  <span class="header-tag">Settings</span>
+  <div class="header-links">
+    <a href="/admin.html" class="hl">Milestones &amp; Comms</a>
+    <a href="/settings.html" class="hl active">Settings</a>
+    <a href="/index.html" class="hl">View Hub</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="section-title">Site Copy</div>
+  <div class="card">
+    <div class="field">
+      <label>Hub Title</label>
+      <input type="text" id="set-title" placeholder="The Homesearch Milestone Hub" oninput="updatePreview()"/>
+      <div class="hint">The last two words will appear in blue on the hub</div>
+    </div>
+    <div class="field">
+      <label>Hub Subtitle</label>
+      <input type="text" id="set-sub" placeholder="Every time we hit something big, it gets locked inside a puzzle. Crack it, claim your place on the leaderboard." oninput="updatePreview()"/>
+    </div>
+    <button class="save-btn" onclick="saveSettings()">Save Changes</button>
+
+    <div class="preview">
+      <div class="preview-label">Preview</div>
+      <div class="preview-title" id="prev-title">The Homesearch<span id="prev-span">Milestone Hub</span></div>
+      <div class="preview-sub" id="prev-sub">Every time we hit something big, it gets locked inside a puzzle. Crack it, claim your place on the leaderboard.</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var CF = 'https://hailo-milestone.demi-048.workers.dev/data';
+var _data = {};
+
+async function load(){
+  try {
+    var r = await fetch(CF);
+    _data = await r.json();
+    var s = _data.settings || {};
+    if(s.heroTitle) document.getElementById('set-title').value = s.heroTitle;
+    if(s.heroSub)   document.getElementById('set-sub').value   = s.heroSub;
+    updatePreview();
+  } catch(e){}
+}
+
+function updatePreview(){
+  var title = document.getElementById('set-title').value || 'The Homesearch Milestone Hub';
+  var sub   = document.getElementById('set-sub').value   || 'Every time we hit something big, it gets locked inside a puzzle.';
+  var words = title.trim().split(' ');
+  var mainText, spanText;
+  if(words.length >= 2){
+    spanText = words.slice(-2).join(' ');
+    mainText = words.slice(0,-2).join(' ');
+  } else {
+    spanText = ''; mainText = title;
+  }
+  var pt = document.getElementById('prev-title');
+  var ps = document.getElementById('prev-span');
+  pt.childNodes[0].textContent = mainText + (mainText ? '' : '');
+  ps.textContent = spanText;
+  document.getElementById('prev-sub').textContent = sub;
+}
+
+async function saveSettings(){
+  var title = document.getElementById('set-title').value.trim();
+  var sub   = document.getElementById('set-sub').value.trim();
+  if(!_data.settings) _data.settings = {};
+  _data.settings.heroTitle = title;
+  _data.settings.heroSub   = sub;
+  try {
+    await fetch(CF, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(_data)});
+    showToast('Saved!');
+  } catch(e){ showToast('Error saving', true); }
+}
+
+function showToast(msg, err){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (err?' error':'') + ' show';
+  setTimeout(function(){ t.className = 'toast'; }, 2500);
+}
+
+load();
+</script>
+</body>
+</html>
