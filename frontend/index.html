@@ -111,8 +111,8 @@ body { display:flex; flex-direction:column; align-items:center; }
 <div class="hero">
   <div class="hero-glow"></div>
   <img src="/logo.png" class="hero-logo" alt="HAILO"/>
-  <div class="hero-title">The Homesearch<span>Milestone Hub</span></div>
-  <div class="hero-sub">Every time we hit something big, it gets locked inside a puzzle. Crack it, claim your place on the leaderboard.</div>
+  <div class="hero-title" id="hero-title">The Homesearch<span id="hero-title-span">Milestone Hub</span></div>
+  <div class="hero-sub" id="hero-sub">Every time we hit something big, it gets locked inside a puzzle. Crack it, claim your place on the leaderboard.</div>
   <div class="hero-divider"></div>
 </div>
 
@@ -259,12 +259,12 @@ function fetchFresh(callback){
   try{
     var cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
     if(cached&&(Date.now()-cached.ts)<CACHE_TTL){
-      render(cached.d);
-      fetchFresh(function(fresh){render(fresh);renderComms(fresh);});
+      render(cached.d);applySettings(cached.d);
+      fetchFresh(function(fresh){render(fresh);renderComms(fresh);applySettings(fresh);});
       return;
     }
   }catch(e){}
-  fetchFresh(function(data){render(data);renderComms(data);});
+  fetchFresh(function(data){render(data);renderComms(data);applySettings(data);});
 })();
 
 // Quick reveal
@@ -439,6 +439,29 @@ function openCcModal(groups){
 function closeCcModal(){
   document.getElementById('cc-modal').classList.remove('open');
   document.body.style.overflow = '';
+}
+
+function applySettings(record){
+  var s = record && record.settings;
+  if(!s) return;
+  if(s.heroTitle){
+    var parts = s.heroTitle.split(' ');
+    // Put last 2 words in the span (coloured), rest in main text
+    if(parts.length >= 2){
+      var span = parts.slice(-2).join(' ');
+      var main = parts.slice(0,-2).join(' ');
+      var el = document.getElementById('hero-title');
+      var sp = document.getElementById('hero-title-span');
+      if(el && sp){ el.childNodes[0].textContent = main; sp.textContent = span; }
+    } else {
+      var el = document.getElementById('hero-title');
+      if(el) el.textContent = s.heroTitle;
+    }
+  }
+  if(s.heroSub){
+    var sub = document.getElementById('hero-sub');
+    if(sub) sub.textContent = s.heroSub;
+  }
 }
 </script>
 
