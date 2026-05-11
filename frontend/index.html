@@ -259,12 +259,12 @@ function fetchFresh(callback){
   try{
     var cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
     if(cached&&(Date.now()-cached.ts)<CACHE_TTL){
-      render(cached.d);applySettings(cached.d);
-      fetchFresh(function(fresh){render(fresh);renderComms(fresh);applySettings(fresh);});
+      render(cached.d);applySettings(cached.d);applySettings(cached.d);
+      fetchFresh(function(fresh){render(fresh);applySettings(fresh);renderComms(fresh);applySettings(fresh);});
       return;
     }
   }catch(e){}
-  fetchFresh(function(data){render(data);renderComms(data);applySettings(data);});
+  fetchFresh(function(data){render(data);applySettings(data);renderComms(data);applySettings(data);});
 })();
 
 // Quick reveal
@@ -457,6 +457,24 @@ function applySettings(record){
       var el = document.getElementById('hero-title');
       if(el) el.textContent = s.heroTitle;
     }
+  }
+  if(s.heroSub){
+    var sub = document.getElementById('hero-sub');
+    if(sub) sub.textContent = s.heroSub;
+  }
+}
+
+function applySettings(record){
+  var s = record && record.settings;
+  if(!s) return;
+  if(s.heroTitle){
+    var words = s.heroTitle.trim().split(' ');
+    var span = words.length >= 2 ? words.slice(-2).join(' ') : '';
+    var main = words.length >= 2 ? words.slice(0,-2).join(' ') : s.heroTitle;
+    var em = document.getElementById('hero-main');
+    var es = document.getElementById('hero-span');
+    if(em) em.textContent = main;
+    if(es) es.textContent = span;
   }
   if(s.heroSub){
     var sub = document.getElementById('hero-sub');
