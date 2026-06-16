@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hailo Quiz — Admin</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--navy:#1A2B45;--purple:#6B4FBB;--purple-light:#EDE8F9;--accent:#F5A623;--correct:#1A8A4A;--correct-bg:#E8F7EE;--danger:#C0392B;--danger-bg:#FDEDEB;--text:#1A2B45;--muted:#6B7A8D;--border:#DDE2EB;--white:#FFFFFF;--surface:#F7F8FB;--mid-grey:#EEF0F4}
+  body{font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);min-height:100vh}
+  .topbar{background:var(--navy);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo-h{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px}
+  .logo-h span{color:var(--accent)}
+  .logo-badge{background:var(--purple);color:#fff;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:4px}
+  .admin-pill{background:var(--accent);color:var(--navy);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border-radius:20px}
+  .main{max-width:1000px;margin:0 auto;padding:36px 24px 80px}
+  .status-bar{display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:12px;padding:14px 20px;margin-bottom:28px;box-shadow:0 1px 8px rgba(26,43,69,.07);flex-wrap:wrap;gap:12px}
+  .status-left{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .stat-chip{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--text)}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .dot-green{background:var(--correct)}.dot-amber{background:var(--accent)}.dot-grey{background:var(--muted)}
+  .save-btn{background:var(--purple);color:#fff;border:none;border-radius:8px;padding:10px 22px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s,box-shadow .15s;box-shadow:0 3px 10px rgba(107,79,187,.3)}
+  .save-btn:hover{background:#5940a8}.save-btn:disabled{opacity:.6;cursor:not-allowed}
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+  .section-title{font-size:18px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:10px}
+  .count-badge{background:var(--purple-light);color:var(--purple);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .add-btn{background:var(--correct);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+  .add-btn:hover{background:#16773f}
+  .filter-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .filter-btn{background:#fff;border:1.5px solid var(--border);border-radius:20px;padding:6px 14px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s}
+  .filter-btn.active{background:var(--navy);border-color:var(--navy);color:#fff}
+  .filter-btn:hover:not(.active){border-color:var(--navy);color:var(--navy)}
+  .questions-list{display:flex;flex-direction:column;gap:12px}
+  .q-card{background:#fff;border-radius:12px;box-shadow:0 1px 8px rgba(26,43,69,.07);overflow:hidden;border:1.5px solid var(--border)}
+  .q-card.inactive{opacity:.55}
+  .q-card.inactive .q-card-header{background:var(--mid-grey)}
+  .q-card-header{background:var(--navy);padding:12px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
+  .q-num{background:var(--purple);color:#fff;font-size:12px;font-weight:800;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .q-card.inactive .q-num{background:var(--muted)}
+  .q-preview{flex:1;font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .q-card.inactive .q-preview{color:var(--muted)}
+  .q-category-tag{background:rgba(255,255,255,.15);color:rgba(255,255,255,.85);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;border-radius:4px;flex-shrink:0}
+  .q-card-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+  .icon-btn{background:rgba(255,255,255,.1);border:none;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:background .15s;color:#fff}
+  .icon-btn:hover{background:rgba(255,255,255,.25)}.icon-btn.danger:hover{background:rgba(192,57,43,.5)}
+  .chevron{transition:transform .2s;font-size:11px;color:rgba(255,255,255,.6)}
+  .q-card.expanded .chevron{transform:rotate(180deg)}
+  .q-card-body{display:none;padding:20px 20px 24px;border-top:1px solid var(--border)}
+  .q-card.expanded .q-card-body{display:block}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  .form-group{display:flex;flex-direction:column;gap:5px}
+  .form-group.full{grid-column:1/-1}
+  .form-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+  .form-input,.form-select,.form-textarea{font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;transition:border-color .15s;width:100%}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--purple);background:#fff}
+  .form-textarea{resize:vertical;min-height:70px;line-height:1.5}
+  .explanation-textarea{min-height:100px}
+  .answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .answer-field{display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;transition:border-color .15s}
+  .answer-field:focus-within{border-color:var(--purple);background:#fff}
+  .answer-field.is-correct{border-color:var(--correct);background:var(--correct-bg)}
+  .answer-letter-tag{width:24px;height:24px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--muted);flex-shrink:0}
+  .answer-field.is-correct .answer-letter-tag{background:var(--correct);color:#fff}
+  .answer-input{font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:transparent;border:none;outline:none;flex:1;min-width:0}
+  .correct-selector{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .correct-selector-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+  .correct-option{display:flex;align-items:center;gap:5px;cursor:pointer}
+  .correct-option input{accent-color:var(--correct);cursor:pointer}
+  .correct-option span{font-size:13px;font-weight:600;color:var(--text)}
+  .card-footer{display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid var(--border);margin-top:4px}
+  .toggle-wrap{display:flex;align-items:center;gap:8px}
+  .toggle{position:relative;width:40px;height:22px}
+  .toggle input{opacity:0;width:0;height:0}
+  .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:22px;cursor:pointer;transition:background .2s}
+  .toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s}
+  .toggle input:checked+.toggle-slider{background:var(--correct)}
+  .toggle input:checked+.toggle-slider::before{transform:translateX(18px)}
+  .toggle-label{font-size:13px;font-weight:600;color:var(--muted)}
+  .delete-btn{background:none;border:1.5px solid var(--danger);color:var(--danger);border-radius:8px;padding:7px 14px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s}
+  .delete-btn:hover{background:var(--danger-bg)}
+  .empty-state{text-align:center;padding:60px 24px;color:var(--muted)}
+  .empty-icon{font-size:48px;margin-bottom:16px}
+  .empty-state h3{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--navy)}
+  .empty-state p{font-size:14px;line-height:1.6}
+  .toast{position:fixed;bottom:32px;right:32px;background:var(--navy);color:#fff;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(26,43,69,.25);z-index:999;display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s;pointer-events:none}
+  .toast.show{transform:translateY(0);opacity:1}
+  .toast.success{border-left:4px solid var(--correct)}.toast.error{border-left:4px solid var(--danger)}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,43,69,.55);z-index:200;align-items:center;justify-content:center;padding:24px}
+  .modal-overlay.show{display:flex}
+  .modal{background:#fff;border-radius:16px;max-width:540px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(26,43,69,.25);animation:slideUp .25s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .modal-header{background:var(--navy);padding:20px 24px;display:flex;align-items:center;justify-content:space-between}
+  .modal-title{font-size:16px;font-weight:700;color:#fff}
+  .modal-close{background:rgba(255,255,255,.1);border:none;color:#fff;width:30px;height:30px;border-radius:6px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .modal-close:hover{background:rgba(255,255,255,.2)}
+  .modal-body{padding:24px}
+  .modal-body p{font-size:14px;color:var(--text);line-height:1.6;margin-bottom:20px}
+  .modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:0 24px 24px}
+  .btn-cancel{background:var(--surface);border:1.5px solid var(--border);color:var(--muted);border-radius:8px;padding:10px 18px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+  .btn-cancel:hover{background:var(--border)}
+  .btn-confirm-delete{background:var(--danger);border:none;color:#fff;border-radius:8px;padding:10px 18px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+  .btn-confirm-delete:hover{background:#a93226}
+  @media(max-width:640px){.topbar{padding:12px 16px}.main{padding:20px 14px 60px}.form-grid{grid-template-columns:1fr}.answers-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-h">H<span>.</span></div>
+    <span style="color:rgba(255,255,255,0.4);font-size:20px;margin:0 2px">|</span>
+    <span style="color:white;font-size:14px;font-weight:600">Homesearch</span>
+    <div class="logo-badge">Hailo</div>
+  </div>
+  <div class="admin-pill">⚙ Quiz Admin</div>
+</div>
+
+<div class="main">
+  <div class="status-bar">
+    <div class="status-left">
+      <div class="stat-chip"><div class="dot dot-green"></div><span id="stat-total">0 questions</span></div>
+      <div class="stat-chip"><div class="dot dot-green"></div><span id="stat-active">0 active</span></div>
+      <div class="stat-chip"><div class="dot dot-grey"></div><span id="stat-inactive">0 inactive</span></div>
+      <div class="stat-chip" id="save-status"><div class="dot dot-amber"></div><span>Loading...</span></div>
+    </div>
+    <button class="save-btn" id="save-btn" onclick="saveAll()">💾 Save to Cloudflare</button>
+  </div>
+
+  <div class="section-header">
+    <div class="section-title">Basic Quiz Questions <span class="count-badge" id="count-badge">0</span></div>
+    <button class="add-btn" onclick="addQuestion()">+ Add Question</button>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('What Hailo Is',this)">What Hailo Is</button>
+    <button class="filter-btn" onclick="setFilter('Pricing, Trial & Sign-Up',this)">Pricing & Sign-Up</button>
+    <button class="filter-btn" onclick="setFilter('Scale & Growth',this)">Scale & Growth</button>
+    <button class="filter-btn" onclick="setFilter('The Referral Scheme',this)">Referral Scheme</button>
+    <button class="filter-btn" onclick="setFilter('Hailo in the Homesearch Suite',this)">Homesearch Suite</button>
+  </div>
+
+  <div class="questions-list" id="questions-list">
+    <div class="empty-state"><div class="empty-icon">⏳</div><h3>Loading questions...</h3><p>Fetching from Cloudflare KV</p></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Delete Question</div>
+      <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <div class="modal-body"><p>Are you sure you want to delete this question? This cannot be undone until you save.</p></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-confirm-delete" onclick="confirmDelete()">Delete Question</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const WORKER='https://hailo-milestone.demi-048.workers.dev';
+const CATEGORIES=['What Hailo Is','Pricing, Trial & Sign-Up','Scale & Growth','The Referral Scheme','Hailo in the Homesearch Suite'];
+
+const SEED_QUESTIONS = [
+  { id: 'q001', active: true, category: 'What Hailo Is', question: 'What does the acronym HAILO stand for?', answers: ['Home Agency Intelligence Listings Online','Homesearch AI Listings Optimiser','Home Automated Indexing Listings Output','Homesearch Agent Intelligence Lead Optimiser'], correct: 1, explanation: "HAILO stands for Homesearch AI Listings Optimiser. The name matters because it tells you exactly what the product does. When talking to a customer, you can explain it simply: 'It\'s a product from Homesearch that increases the visibility of your listings and agency details when buyers search on tools like ChatGPT or Google Gemini.'" },
+  { id: 'q002', active: true, category: 'What Hailo Is', question: 'In plain English, what problem does Hailo solve for estate agents?', answers: ['It replaces the need for Rightmove and Zoopla','It increases the visibility of agent listings and contact details when buyers search on AI search platforms like ChatGPT and Google AI mode','It automates property descriptions using AI','It tracks how many leads come from social media'], correct: 1, explanation: "The core problem Hailo solves is visibility. More and more buyers are using AI tools like ChatGPT, Google Gemini, Perplexity and Copilot to search for property — and without Hailo, most agents have zero direct presence on those platforms. Hailo makes sure listings appear AND that the agent's contact details are clearly shown, so enquiries come back to the agent rather than disappearing into a portal. The key phrase to remember: 'discoverable, with your agency details clearly shown.'" },
+  { id: 'q003', active: true, category: 'What Hailo Is', question: 'Is Hailo a portal?', answers: ['Yes — it is a new consumer-facing property portal','Yes — it replaces Rightmove for agents who sign up','No — it works in the background to make listings discoverable in AI search without competing with portals','No — it is a social media marketing tool'], correct: 2, explanation: "This is one of the most important things to be clear on. Hailo is NOT a traditional portal. It doesn't compete with agents' listings, doesn't sit between the agent and their customer, and doesn't try to attract consumers to browse a website. It works entirely in the background, optimising listings so they surface correctly when AI platforms like ChatGPT or Perplexity retrieve property information. The Homesearch listing pages exist as reference material for AI, not as a consumer destination." },
+  { id: 'q004', active: true, category: 'What Hailo Is', question: 'Which AI platforms does Hailo target for listing visibility?', answers: ['Only ChatGPT','Only Google and Bing','ChatGPT, Google Gemini, Perplexity, Copilot and Claude + More','Facebook, Instagram and TikTok'], correct: 2, explanation: "Hailo targets the major AI search platforms. This matters because each platform retrieves information differently: some rely on Bing or Google, while Perplexity uses its own crawler. Hailo works across all of them, meaning agents get visibility wherever buyers happen to be searching. In the team's benchmark tests we track across six platforms, although we optimise for more." },
+  { id: 'q005', active: true, category: 'What Hailo Is', question: "What does 'GEO' stand for in the context of Hailo?", answers: ['Geographic Engine Optimisation','Generative Engine Optimisation','Google Engine Outreach','General Estate Optimisation'], correct: 1, explanation: "GEO stands for Generative Engine Optimisation — the AI-era equivalent of SEO. While traditional SEO focuses on ranking in Google's blue links, GEO is about being discovered and cited inside AI-generated answers. Hailo is specifically built for GEO. The gap between traditional SEO and GEO is widening as AI platforms develop their own ways of ranking information, increasingly favouring clean, structured, low-friction content — which is exactly what Hailo provides." },
+  { id: 'q006', active: true, category: 'What Hailo Is', question: 'What does Hailo do to listings before distributing them to AI platforms?', answers: ['Nothing — it passes listings through exactly as received','It rewrites property descriptions using AI','It structures and enriches listings with additional property and geographical data to optimise them for AI discovery','It converts listings into social media posts'], correct: 2, explanation: "When Hailo receives listings, it doesn't just pass them on. It appends them with additional property-specific and geographical data that makes them richer and more findable. This is the 'optimisation' part of Hailo. The result is that when an AI platform searches for property matching a buyer's description — 'three-bed semi with a garden near transport links, budget £500k' — the structured Hailo listing is far more likely to surface than an unoptimised one." },
+  { id: 'q007', active: true, category: 'What Hailo Is', question: "Will an agent's team need to change how they work after signing up to Hailo?", answers: ['Yes — they need to manually upload listings to a new platform each day','Yes — they need to rewrite all property descriptions in a specific format','No — there are no new systems, no duplicate entry, and no change to existing workflow','Yes — they need to install new software on every computer in the office'], correct: 2, explanation: "One of Hailo's strongest selling points is zero disruption. Negotiators continue exactly as they do today. Hailo connects to the existing listings feed (via CRM integration or web scrape), handles all the enrichment and optimisation itself, and distributes to AI platforms automatically. There is nothing for the team to do day-to-day. This is a key message for valuation conversations too — 'it runs entirely in the background.'" },
+  { id: 'q008', active: true, category: 'What Hailo Is', question: 'Hailo specifically helps with what type of search, which is different from traditional SEO?', answers: ['Paid advertising on Google','Generative Engine Optimisation — being found inside AI-generated answers','Social media reach on Instagram and Facebook','Email marketing open rates'], correct: 1, explanation: "Traditional SEO focuses on ranking in Google's link-based search results. GEO (Generative Engine Optimisation) is about being cited and surfaced inside AI-generated answers. These are different environments with different rules. AI platforms increasingly prefer clean, structured, low-friction content — not portal websites full of pop-ups, banners and redirects. Hailo is built specifically for GEO." },
+  { id: 'q009', active: true, category: 'What Hailo Is', question: "What is the 'before and after' mindset shift that Hailo creates for an estate agent?", answers: ['Before: we have a website. After: we have a Hailo dashboard.','Before: portals are enough. After: listings need to be discoverable in AI search with the agency clearly shown and the route back to us intact.','Before: we use Rightmove. After: we use Hailo instead.','Before: we do SEO. After: we do not need SEO anymore.'], correct: 1, explanation: "This before/after framing captures the mindset shift perfectly. The old thinking — 'we're on the portals, that's enough' — is becoming outdated as more buyers start their property search on AI tools. The new reality is that listings need to be discoverable wherever people search, with the agency's details clearly shown, and a clean route back to the agent. Hailo delivers that. This is a useful framing for valuation conversations." },
+  { id: 'q010', active: true, category: 'Pricing, Trial & Sign-Up', question: 'How long is the current free trial for Hailo?', answers: ['12 months','6 months','3 months','1 month'], correct: 2, explanation: "The current free trial is 3 months completely free. It's worth noting that early adopters who signed up when Hailo launched received longer trials — some received 12 months, others 6 months — so existing customers you speak to may be on different trial lengths. For anyone signing up today, the offer is 3 months free." },
+  { id: 'q011', active: true, category: 'Pricing, Trial & Sign-Up', question: 'What is the monthly cost of Hailo after the free trial?', answers: ['£250 per branch per month','£80 net per branch per month','£150 per branch per month','£80 per agency regardless of branch count'], correct: 1, explanation: "Hailo costs £80 net per branch per month after the free trial. This price is fixed until 2030 — an important point to make in conversations, as it de-risks the decision. For context, Rightmove typically costs around £2,200 per month for sales and lettings. At £80, Hailo isn't positioned as a portal replacement, but as an affordable visibility layer in emerging AI search channels." },
+  { id: 'q012', active: true, category: 'Pricing, Trial & Sign-Up', question: 'After the free trial ends, what happens automatically?', answers: ['The agent is automatically charged £80 per month',"The agent's listings are removed from Hailo immediately",'Nothing — agents are not automatically invoiced and choose whether to continue','The agent is downgraded to a reduced free version'], correct: 2, explanation: "Agents are never automatically invoiced at the end of their trial. This is an important reassurance to give customers during onboarding and check-in calls, as it removes any risk anxiety. The trial simply ends and the agent decides whether to continue." },
+  { id: 'q013', active: true, category: 'Pricing, Trial & Sign-Up', question: 'Where does an agent sign up for Hailo?', answers: ['homesearch.co.uk/hailo','agents.homesearch.co.uk/activate-hailo','hailo.co.uk','agents.homesearch.co.uk/product/hailo'], correct: 1, explanation: "The sign-up URL is agents.homesearch.co.uk/activate-hailo. This is also the link used in the referral scheme. When sharing with customers, direct them here — and take it one step further by completing the form on their behalf." },
+  { id: 'q014', active: true, category: 'Pricing, Trial & Sign-Up', question: 'How quickly does an agent go live on Hailo after signing up?', answers: ['Immediately upon payment','Within 30 days after CRM verification','In days, with visibility building over 1–3 months','It can take up to 6 months to see any results'], correct: 2, explanation: "Hailo gets agents live in days — there is no lengthy setup process. However, it's important to set the right expectations: visibility across search and AI builds over 1–3 months as listings get indexed and signals accumulate. The right framing is: 'You'll be live within days, and over the following weeks and months you'll see your presence across AI platforms grow.'" },
+  { id: 'q015', active: true, category: 'Pricing, Trial & Sign-Up', question: 'What do agents receive as part of their onboarding after signing up for Hailo?', answers: ['A phone call from a Homesearch director','A welcome email setting out what to expect, plus the referral scheme email','A printed brochure in the post','Access to a live training webinar'], correct: 1, explanation: "Every new Hailo sign-up receives a welcome email explaining what to expect — how their listings will be connected, what the timeline looks like, and what happens next. They also receive the referral scheme email with their unique referral link. The onboarding path then depends on their CRM: Reapit customers install the app; direct integration CRM customers are contacted on their behalf; web scrape customers receive a follow-up within a few days." },
+  { id: 'q016', active: true, category: 'Scale & Growth', question: 'Approximately how many UK estate agency branches are currently live on Hailo?', answers: ['Around 500','Around 1,500','Around 3,644','Around 10,000'], correct: 2, explanation: "As of mid-June 2026, 3,644 branches are live on Hailo. This is a powerful credibility signal in conversations — it shows the product is established and growing rapidly. Pairing this with the listings figure (274,172 listings being optimised) and the market share figure (approximately 27–29% of all UK listings) gives a compelling picture of scale." },
+  { id: 'q017', active: true, category: 'Scale & Growth', question: 'Approximately how many listings are currently being optimised through Hailo?', answers: ['Around 50,000','Around 274,172','Around 1 million','Around 100,000'], correct: 1, explanation: "274,172 listings are currently live and being structured, enriched and optimised for AI search through Hailo (as of mid-June 2026). The total UK listings market is approximately 1 million at any given time, meaning Hailo currently represents around 27–29% of all UK listings." },
+  { id: 'q018', active: true, category: 'Scale & Growth', question: 'What percentage of total UK listings does Hailo currently represent?', answers: ['Around 5%','Around 15%','Around 27–29%','Around 50%'], correct: 2, explanation: "With approximately 274,000 listings live out of a total UK market of around 1 million at any given time, Hailo currently represents approximately 27–29% of all UK listings. The network effect means this matters for every agent on it: more listings make the Homesearch platform more authoritative to AI platforms, which benefits all agents." },
+  { id: 'q019', active: true, category: 'Scale & Growth', question: 'Hailo ran a benchmark testing AI visibility across 12 agents. What was the most striking finding?', answers: ['All 12 agents appeared on every AI platform tested','For 8 of 12 agents (67%), Homesearch was their only direct AI presence — their own websites received zero citations','Rightmove dominated all AI search results','ChatGPT refused to show any property listings'], correct: 1, explanation: "This is one of the most powerful proof points available. In a benchmark of 2,160 queries across 12 agents on 6 AI platforms, 8 of the 12 agents (67%) had zero AI presence through their own website. Not one mention in ChatGPT, Perplexity, Gemini, Copilot or Claude. The only AI visibility those agents had was what Homesearch created for them through Hailo." },
+  { id: 'q020', active: true, category: 'Scale & Growth', question: "In Hailo's benchmark, which AI platform was the dominant channel for listing visibility?", answers: ['ChatGPT','Google Gemini','Perplexity','Copilot'], correct: 2, explanation: "Perplexity was the dominant channel in Hailo's 2,160-query benchmark. Unlike Gemini (which layers over Google) or ChatGPT (which uses Bing's search API), Perplexity has its own independent crawler and search engine. It indexes content on its own terms, and Homesearch's clean, structured listing pages score well there." },
+  { id: 'q021', active: true, category: 'Scale & Growth', question: "What type of search query produced the most AI citations in Hailo's benchmark?", answers: ["Simple postcode searches like 'properties in SW1'","Agent name searches like 'Savills properties'","Constraint-rich natural language searches like '3-bed semi, garden, garage, near transport, budget £500k'","Portal searches redirected to AI"], correct: 2, explanation: "Constraint-rich, natural language queries produced the most AI citations — exactly the way real buyers use AI to search for property. Buyers on AI platforms don't use portal-style filters, they describe what they want conversationally. Hailo structures listings specifically to answer these complex queries, which is why they surface when unoptimised competitor listings don't." },
+  { id: 'q022', active: true, category: 'The Referral Scheme', question: 'How many free months does an agent earn for their first successful Hailo referral?', answers: ['1 month free','2 months free','3 months free','6 months free'], correct: 2, explanation: "The first successful referral earns 3 months free added to the agent's free trial, worth £240. The scheme is cumulative: 2 referrals = 6 months total (£480), 3 referrals = 9 months total (£720). And for 4 referrals, the agent earns a Homesearch Lightsaber — yes, really. It's worth mentioning the referral scheme whenever an agent seems enthusiastic about Hailo on a call." },
+  { id: 'q023', active: true, category: 'The Referral Scheme', question: 'What is the value of 3 successful referrals to the referring agent?', answers: ['£80','£240','£480','£720'], correct: 3, explanation: "Three successful referrals adds 9 months free to the agent's trial, worth £720 (9 × £80). The scheme is: 1 referral = 3 months (£240), 2 referrals = 6 months (£480), 3 referrals = 9 months (£720). Worth surfacing with customers who are positive about Hailo and have industry connections." },
+  { id: 'q024', active: true, category: 'The Referral Scheme', question: 'What does an agent earn for referring 4 agents to Hailo?', answers: ['A £500 cash reward','12 months free subscription','A Homesearch Lightsaber','A free upgrade to Homesearch Pro'], correct: 2, explanation: "Four successful referrals earns the agent a Homesearch Lightsaber — Homesearch's way of saying 'you've earned the right to defend the future of property search against the portal empire properly.' It's memorable and reinforces the bigger narrative: Hailo is a network product. The more agents on it, the stronger it becomes for everyone." },
+  { id: 'q025', active: true, category: 'Hailo in the Homesearch Suite', question: 'Where does Hailo sit within the Homesearch product suite?', answers: ['It is a standalone product with no connection to other Homesearch tools','It is the visibility layer — making listings discoverable in AI search — with ReContact, Insights and Pro building on top','It replaces all other Homesearch products','It is only available to customers who also have Homesearch Pro'], correct: 1, explanation: "Hailo is the visibility layer within Homesearch. It handles discoverability — making sure listings and agency details are found in AI search. If agents then want to turn that visibility into more immediate conversations, they look at ReContact. For stronger valuation conversations, there's Insights. For a more consistent prospecting engine, there's Pro. This suite framing is important for cross-selling." }
+];
+
+let questions=[],currentFilter='all',deleteTarget=null,hasUnsaved=false;
+
+window.addEventListener('DOMContentLoaded',loadQuestions);
+
+async function loadQuestions(){
+  try{
+    const res=await fetch(WORKER+'/quiz-questions',{signal:AbortSignal.timeout(6000)});
+    if(!res.ok) throw new Error();
+    const data=await res.json();
+    questions=Array.isArray(data)&&data.length?data:SEED_QUESTIONS;
+    render();setUnsaved(false);
+  }catch(e){
+    questions=SEED_QUESTIONS;
+    render();
+    showToast('Could not load from Cloudflare — using default questions. Save to push to KV.','error');
+    setUnsaved(true);
+  }
+}
+
+function uid(){return Math.random().toString(36).slice(2,10)}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function render(){
+  const list=document.getElementById('questions-list');
+  const filtered=currentFilter==='all'?questions:questions.filter(q=>q.category===currentFilter);
+  if(!filtered.length){list.innerHTML=`<div class="empty-state"><div class="empty-icon">📭</div><h3>No questions here</h3><p>Add a new question or change the filter above.</p></div>`;updateStats();return}
+  list.innerHTML=filtered.map((q,visIdx)=>{
+    const realIdx=questions.indexOf(q);
+    return `<div class="q-card ${q.active===false?'inactive':''}" id="card-${q.id}">
+      <div class="q-card-header" onclick="toggleCard('${q.id}')">
+        <div class="q-num">${visIdx+1}</div>
+        <div class="q-preview">${esc(q.question)||'New question'}</div>
+        <div class="q-category-tag">${esc(q.category)}</div>
+        <div class="q-card-actions" onclick="event.stopPropagation()">
+          <button class="icon-btn" title="Move up" onclick="moveUp(${realIdx})">↑</button>
+          <button class="icon-btn" title="Move down" onclick="moveDown(${realIdx})">↓</button>
+          <button class="icon-btn danger" title="Delete" onclick="openDeleteModal(${realIdx})">🗑</button>
+        </div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="q-card-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label class="form-label">Question</label>
+            <textarea class="form-textarea" rows="2" onchange="updateField('${q.id}','question',this.value)">${esc(q.question)}</textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-select" onchange="updateField('${q.id}','category',this.value)">
+              ${CATEGORIES.map(c=>`<option value="${c}"${q.category===c?' selected':''}>${c}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-label" style="margin-bottom:8px">Answer Options <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(select the correct one below)</span></div>
+        <div class="answers-grid">
+          ${['A','B','C','D'].map((letter,i)=>`
+            <div class="answer-field${q.correct===i?' is-correct':''}" id="af-${q.id}-${i}">
+              <div class="answer-letter-tag">${letter}</div>
+              <input class="answer-input" type="text" value="${esc(q.answers&&q.answers[i]||'')}" onchange="updateAnswer('${q.id}',${i},this.value)" placeholder="Answer ${letter}">
+            </div>`).join('')}
+        </div>
+        <div class="correct-selector">
+          <span class="correct-selector-label">Correct answer:</span>
+          ${['A','B','C','D'].map((letter,i)=>`
+            <label class="correct-option">
+              <input type="radio" name="correct-${q.id}" value="${i}"${q.correct===i?' checked':''} onchange="setCorrect('${q.id}',${i})">
+              <span>${letter}</span>
+            </label>`).join('')}
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Explanation / Tip (shown after correct answer)</label>
+          <textarea class="form-textarea explanation-textarea" onchange="updateField('${q.id}','explanation',this.value)">${esc(q.explanation)}</textarea>
+        </div>
+        <div class="card-footer">
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox"${q.active===false?'':' checked'} onchange="toggleActive('${q.id}',this.checked)">
+              <div class="toggle-slider"></div>
+            </label>
+            <span class="toggle-label" id="tl-${q.id}">${q.active===false?'Inactive — hidden from quiz':'Active — shown in quiz'}</span>
+          </div>
+          <button class="delete-btn" onclick="openDeleteModal(${realIdx})">Delete Question</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateStats();
+}
+
+function updateStats(){
+  const total=questions.length,active=questions.filter(q=>q.active!==false).length,inactive=total-active;
+  document.getElementById('stat-total').textContent=`${total} question${total!==1?'s':''}`;
+  document.getElementById('stat-active').textContent=`${active} active`;
+  document.getElementById('stat-inactive').textContent=`${inactive} inactive`;
+  document.getElementById('count-badge').textContent=total;
+}
+
+function setUnsaved(val){
+  hasUnsaved=val;
+  const chip=document.getElementById('save-status');
+  chip.innerHTML=val?'<div class="dot dot-amber"></div><span>Unsaved changes</span>':'<div class="dot dot-green"></div><span>All saved</span>';
+}
+
+function toggleCard(id){document.getElementById('card-'+id)?.classList.toggle('expanded')}
+
+function updateField(id,field,val){
+  const q=questions.find(q=>q.id===id);if(!q)return;
+  q[field]=val;setUnsaved(true);
+  if(field==='question'){const el=document.querySelector('#card-'+id+' .q-preview');if(el)el.textContent=val||'New question'}
+  if(field==='category'){const el=document.querySelector('#card-'+id+' .q-category-tag');if(el)el.textContent=val}
+  if(field!=='explanation')updateStats();
+}
+
+function updateAnswer(id,idx,val){
+  const q=questions.find(q=>q.id===id);
+  if(q){if(!q.answers)q.answers=['','','',''];q.answers[idx]=val;setUnsaved(true)}
+}
+
+function setCorrect(id,idx){
+  const q=questions.find(q=>q.id===id);if(!q)return;
+  q.correct=idx;setUnsaved(true);
+  ['A','B','C','D'].forEach((_,i)=>{
+    const af=document.getElementById(`af-${id}-${i}`);
+    if(af)af.classList.toggle('is-correct',i===idx);
+  });
+}
+
+function toggleActive(id,val){
+  const q=questions.find(q=>q.id===id);if(!q)return;
+  q.active=val;setUnsaved(true);
+  const card=document.getElementById('card-'+id);
+  if(card)card.classList.toggle('inactive',!val);
+  const lbl=document.getElementById('tl-'+id);
+  if(lbl)lbl.textContent=val?'Active — shown in quiz':'Inactive — hidden from quiz';
+  updateStats();
+}
+
+function addQuestion(){
+  const q={id:uid(),active:true,category:currentFilter!=='all'?currentFilter:CATEGORIES[0],question:'',answers:['','','',''],correct:0,explanation:''};
+  questions.unshift(q);setUnsaved(true);render();
+  const card=document.getElementById('card-'+q.id);
+  if(card){card.classList.add('expanded');card.scrollIntoView({behavior:'smooth',block:'start'})}
+}
+
+function moveUp(idx){if(idx<=0)return;[questions[idx-1],questions[idx]]=[questions[idx],questions[idx-1]];setUnsaved(true);render()}
+function moveDown(idx){if(idx>=questions.length-1)return;[questions[idx],questions[idx+1]]=[questions[idx+1],questions[idx]];setUnsaved(true);render()}
+
+function openDeleteModal(idx){deleteTarget=idx;document.getElementById('delete-modal').classList.add('show')}
+function closeDeleteModal(){deleteTarget=null;document.getElementById('delete-modal').classList.remove('show')}
+function confirmDelete(){if(deleteTarget===null)return;questions.splice(deleteTarget,1);deleteTarget=null;closeDeleteModal();setUnsaved(true);render()}
+
+function setFilter(cat,btn){
+  currentFilter=cat;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');render();
+}
+
+async function saveAll(){
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true;btn.textContent='Saving...';
+  try{
+    const res=await fetch(WORKER+'/quiz-questions',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(questions)});
+    if(!res.ok)throw new Error();
+    setUnsaved(false);showToast('✓ All '+questions.length+' questions saved to Cloudflare','success');
+  }catch(e){showToast('✗ Save failed — check your Worker is running','error')}
+  finally{btn.disabled=false;btn.textContent='💾 Save to Cloudflare'}
+}
+
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');t.textContent=msg;
+  t.className='toast '+type+' show';
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+window.addEventListener('beforeunload',e=>{if(hasUnsaved){e.preventDefault();e.returnValue=''}});
+</script>
+</body>
+</html>
