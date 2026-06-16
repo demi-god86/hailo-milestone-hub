@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hailo by Homesearch — Basic Quiz</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:     #1A2B45;
+    --hailo-purple: #6B4FBB;
+    --hailo-light:  #EDE8F9;
+    --accent:   #F5A623;
+    --correct:  #1A8A4A;
+    --correct-bg: #E8F7EE;
+    --wrong:    #C0392B;
+    --wrong-bg: #FDEDEB;
+    --text:     #1A2B45;
+    --muted:    #6B7A8D;
+    --border:   #DDE2EB;
+    --white:    #FFFFFF;
+    --surface:  #F7F8FB;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    width: 100%;
+    background: var(--navy);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-h {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+  .logo-h span { color: var(--accent); }
+  .logo-badge {
+    background: var(--hailo-purple);
+    color: var(--white);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .level-pill {
+    background: var(--accent);
+    color: var(--navy);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 20px;
+  }
+
+  /* ── MAIN WRAPPER ── */
+  .main {
+    width: 100%;
+    max-width: 780px;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── START SCREEN ── */
+  .start-hero {
+    text-align: center;
+    padding: 48px 24px 40px;
+  }
+  .start-icon {
+    width: 72px;
+    height: 72px;
+    background: var(--hailo-light);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 36px;
+  }
+  .start-hero h1 {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--navy);
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .start-hero h1 em {
+    font-style: normal;
+    color: var(--hailo-purple);
+  }
+  .start-hero p {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 480px;
+    margin: 0 auto 36px;
+    line-height: 1.6;
+  }
+  .start-meta {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .meta-val {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--hailo-purple);
+  }
+  .meta-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .meta-divider {
+    width: 1px;
+    height: 48px;
+    background: var(--border);
+    align-self: center;
+  }
+  .sections-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+  .section-tag {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 14px 32px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+    text-decoration: none;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: var(--hailo-purple);
+    color: var(--white);
+    box-shadow: 0 4px 14px rgba(107,79,187,0.35);
+  }
+  .btn-primary:hover { background: #5940a8; box-shadow: 0 6px 18px rgba(107,79,187,0.45); }
+  .btn-secondary {
+    background: var(--white);
+    color: var(--hailo-purple);
+    border: 2px solid var(--hailo-purple);
+  }
+  .btn-secondary:hover { background: var(--hailo-light); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    margin-bottom: 28px;
+  }
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .progress-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .progress-score {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--hailo-purple);
+  }
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--hailo-purple), #9B7FE8);
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* ── QUESTION CARD ── */
+  .question-card {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(26,43,69,0.08);
+    overflow: hidden;
+  }
+  .q-header {
+    background: var(--navy);
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .q-number {
+    background: var(--hailo-purple);
+    color: var(--white);
+    font-size: 13px;
+    font-weight: 800;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .q-category {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .q-body {
+    padding: 28px 28px 24px;
+  }
+  .q-text {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--navy);
+    margin-bottom: 24px;
+  }
+
+  /* ── ANSWER OPTIONS ── */
+  .answers {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .answer-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    width: 100%;
+  }
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--hailo-purple);
+    background: var(--hailo-light);
+    transform: translateX(3px);
+  }
+  .answer-btn:disabled { cursor: not-allowed; }
+  .answer-letter {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--white);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    transition: all 0.15s;
+    margin-top: 1px;
+  }
+  .answer-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.5;
+    padding-top: 3px;
+  }
+
+  /* answer states */
+  .answer-btn.correct {
+    border-color: var(--correct);
+    background: var(--correct-bg);
+  }
+  .answer-btn.correct .answer-letter {
+    background: var(--correct);
+    border-color: var(--correct);
+    color: var(--white);
+  }
+  .answer-btn.correct .answer-text { color: var(--correct); font-weight: 600; }
+
+  .answer-btn.wrong {
+    border-color: var(--wrong);
+    background: var(--wrong-bg);
+    animation: shake 0.35s ease;
+  }
+  .answer-btn.wrong .answer-letter {
+    background: var(--wrong);
+    border-color: var(--wrong);
+    color: var(--white);
+  }
+  .answer-btn.wrong .answer-text { color: var(--wrong); font-weight: 600; }
+
+  .answer-btn.dimmed {
+    opacity: 0.45;
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%      { transform: translateX(-6px); }
+    40%      { transform: translateX(6px); }
+    60%      { transform: translateX(-4px); }
+    80%      { transform: translateX(4px); }
+  }
+
+  /* ── WRONG FEEDBACK BAR ── */
+  .wrong-bar {
+    display: none;
+    margin-top: 16px;
+    background: var(--wrong-bg);
+    border: 1.5px solid #f5c6c2;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--wrong);
+    align-items: center;
+    gap: 8px;
+  }
+  .wrong-bar.show { display: flex; }
+
+  /* ── TIP MODAL OVERLAY ── */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,43,69,0.55);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .overlay.show { display: flex; }
+
+  .tip-modal {
+    background: var(--white);
+    border-radius: 18px;
+    max-width: 580px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(26,43,69,0.25);
+    overflow: hidden;
+    animation: slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .tip-header {
+    background: linear-gradient(135deg, var(--hailo-purple), #9B7FE8);
+    padding: 20px 24px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .tip-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .tip-header-text { flex: 1; }
+  .tip-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 2px;
+  }
+  .tip-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .tip-body {
+    padding: 24px;
+  }
+  .correct-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--correct-bg);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+  }
+  .correct-banner span {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--correct);
+  }
+  .tip-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .tip-footer {
+    padding: 0 24px 24px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* ── END SCREEN ── */
+  .end-card {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(26,43,69,0.08);
+    overflow: hidden;
+    text-align: center;
+  }
+  .end-banner {
+    padding: 48px 32px 36px;
+    background: linear-gradient(135deg, var(--navy) 0%, #2A3F60 100%);
+  }
+  .end-emoji {
+    font-size: 56px;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .end-score-ring {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255,255,255,0.1);
+    border: 3px solid rgba(255,255,255,0.25);
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  .end-score-num {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1;
+  }
+  .end-score-denom {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.65);
+  }
+  .end-pct {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .end-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+  .end-message {
+    font-size: 15px;
+    color: rgba(255,255,255,0.75);
+    max-width: 420px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+  .end-body {
+    padding: 32px;
+  }
+  .end-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 32px;
+  }
+  .stat { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .stat-val { font-size: 24px; font-weight: 800; }
+  .stat-val.green { color: var(--correct); }
+  .stat-val.red   { color: var(--wrong); }
+  .stat-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .end-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .topbar { padding: 12px 16px; }
+    .main { padding: 24px 14px 60px; }
+    .q-body { padding: 20px 18px 18px; }
+    .q-text { font-size: 16px; }
+    .end-stats { gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-h">H<span>.</span></div>
+    <span style="color:rgba(255,255,255,0.5);font-size:20px;margin:0 2px">|</span>
+    <span style="color:white;font-size:14px;font-weight:600">Homesearch</span>
+    <div class="logo-badge">Hailo</div>
+  </div>
+  <div class="level-pill">Basic — Know It</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- START SCREEN -->
+  <div id="screen-start" class="screen active">
+    <div class="start-hero">
+      <div class="start-icon">🚀</div>
+      <h1>The <em>Hailo</em> Basic Quiz</h1>
+      <p>Test your foundation knowledge of Hailo by Homesearch. 25 questions across the core topics every team member needs to know.</p>
+      <div class="start-meta">
+        <div class="meta-item">
+          <div class="meta-val">25</div>
+          <div class="meta-label">Questions</div>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <div class="meta-val">5</div>
+          <div class="meta-label">Topics</div>
+        </div>
+        <div class="meta-divider"></div>
+        <div class="meta-item">
+          <div class="meta-val">~10</div>
+          <div class="meta-label">Minutes</div>
+        </div>
+      </div>
+      <div class="sections-list">
+        <div class="section-tag">What Hailo Is</div>
+        <div class="section-tag">Pricing, Trial & Sign-Up</div>
+        <div class="section-tag">Scale & Growth</div>
+        <div class="section-tag">The Referral Scheme</div>
+        <div class="section-tag">Hailo in the Homesearch Suite</div>
+      </div>
+      <button class="btn btn-primary" onclick="startQuiz()">
+        Start Quiz →
+      </button>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="screen-quiz" class="screen">
+
+    <!-- Progress -->
+    <div class="progress-wrap">
+      <div class="progress-top">
+        <div class="progress-label" id="progress-label">Question 1 of 25</div>
+        <div class="progress-score" id="progress-score">Score: 0</div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Question Card -->
+    <div class="question-card">
+      <div class="q-header">
+        <div class="q-number" id="q-number">1</div>
+        <div>
+          <div class="q-category" id="q-category">What Hailo Is</div>
+        </div>
+      </div>
+      <div class="q-body">
+        <div class="q-text" id="q-text"></div>
+        <div class="answers" id="answers"></div>
+        <div class="wrong-bar" id="wrong-bar">
+          ✗ &nbsp;Not quite — try another answer
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- END SCREEN -->
+  <div id="screen-end" class="screen">
+    <div class="end-card">
+      <div class="end-banner">
+        <span class="end-emoji" id="end-emoji">🎉</span>
+        <div class="end-score-ring">
+          <div class="end-score-num" id="end-num">0</div>
+          <div class="end-score-denom" id="end-denom">/ 25</div>
+        </div>
+        <div class="end-pct" id="end-pct">0%</div>
+        <div class="end-title" id="end-title">Well done!</div>
+        <div class="end-message" id="end-message"></div>
+      </div>
+      <div class="end-body">
+        <div class="end-stats">
+          <div class="stat">
+            <div class="stat-val green" id="stat-correct">0</div>
+            <div class="stat-label">Correct</div>
+          </div>
+          <div class="stat">
+            <div class="stat-val red" id="stat-wrong">0</div>
+            <div class="stat-label">Incorrect</div>
+          </div>
+          <div class="stat">
+            <div class="stat-val" style="color:var(--hailo-purple)" id="stat-pct">0%</div>
+            <div class="stat-label">Score</div>
+          </div>
+        </div>
+        <div class="end-actions">
+          <button class="btn btn-primary" onclick="retakeQuiz()">↺ Retake Quiz</button>
+          <button class="btn btn-secondary" onclick="showStart()">← Back to Start</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TIP MODAL -->
+<div class="overlay" id="overlay">
+  <div class="tip-modal">
+    <div class="tip-header">
+      <div class="tip-icon">💡</div>
+      <div class="tip-header-text">
+        <div class="tip-label">Hailo Knowledge Tip</div>
+        <div class="tip-title" id="tip-category-label">What Hailo Is</div>
+      </div>
+    </div>
+    <div class="tip-body">
+      <div class="correct-banner">
+        <span>✓</span>
+        <span>Correct! Here's what every Hailo team member should know about this:</span>
+      </div>
+      <div class="tip-text" id="tip-text"></div>
+    </div>
+    <div class="tip-footer">
+      <button class="btn btn-primary" id="tip-next-btn" onclick="closeTip()">
+        Next Question →
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    num: 1, category: "What Hailo Is",
+    question: "What does the acronym HAILO stand for?",
+    answers: ["Home Agency Intelligence Listings Online","Homesearch AI Listings Optimiser","Home Automated Indexing Listings Output","Homesearch Agent Intelligence Lead Optimiser"],
+    correct: 1,
+    explanation: "HAILO stands for Homesearch AI Listings Optimiser. The name matters because it tells you exactly what the product does. When talking to a customer, you can explain it simply: 'It's a product from Homesearch that increases the visibility of your listings and agency details when buyers search on tools like ChatGPT or Google Gemini.'"
+  },
+  {
+    num: 2, category: "What Hailo Is",
+    question: "In plain English, what problem does Hailo solve for estate agents?",
+    answers: ["It replaces the need for Rightmove and Zoopla","It increases the visibility of agent listings and contact details when buyers search on AI search platforms like ChatGPT and Google AI mode","It automates property descriptions using AI","It tracks how many leads come from social media"],
+    correct: 1,
+    explanation: "The core problem Hailo solves is visibility. More and more buyers are using AI tools like ChatGPT, Google Gemini, Perplexity and Copilot to search for property — and without Hailo, most agents have zero direct presence on those platforms. Hailo makes sure listings appear AND that the agent's contact details are clearly shown, so enquiries come back to the agent rather than disappearing into a portal. The key phrase to remember: 'discoverable, with your agency details clearly shown.'"
+  },
+  {
+    num: 3, category: "What Hailo Is",
+    question: "Is Hailo a portal?",
+    answers: ["Yes — it is a new consumer-facing property portal","Yes — it replaces Rightmove for agents who sign up","No — it works in the background to make listings discoverable in AI search without competing with portals","No — it is a social media marketing tool"],
+    correct: 2,
+    explanation: "This is one of the most important things to be clear on. Hailo is NOT a traditional portal. It doesn't compete with agents' listings, doesn't sit between the agent and their customer, and doesn't try to attract consumers to browse a website. It works entirely in the background, optimising listings so they surface correctly when AI platforms like ChatGPT or Perplexity retrieve property information. The Homesearch listing pages exist as reference material for AI, not as a consumer destination."
+  },
+  {
+    num: 4, category: "What Hailo Is",
+    question: "Which AI platforms does Hailo target for listing visibility?",
+    answers: ["Only ChatGPT","Only Google and Bing","ChatGPT, Google Gemini, Perplexity, Copilot and Claude + More","Facebook, Instagram and TikTok"],
+    correct: 2,
+    explanation: "Hailo targets the major AI search platforms. This matters because each platform retrieves information differently: some rely on Bing or Google, while Perplexity uses its own crawler. Hailo works across all of them, meaning agents get visibility wherever buyers happen to be searching. In the team's benchmark tests we track across six platforms, although we optimise for more."
+  },
+  {
+    num: 5, category: "What Hailo Is",
+    question: "What does 'GEO' stand for in the context of Hailo?",
+    answers: ["Geographic Engine Optimisation","Generative Engine Optimisation","Google Engine Outreach","General Estate Optimisation"],
+    correct: 1,
+    explanation: "GEO stands for Generative Engine Optimisation — the AI-era equivalent of SEO. While traditional SEO focuses on ranking in Google's blue links, GEO is about being discovered and cited inside AI-generated answers. Hailo is specifically built for GEO. The gap between traditional SEO and GEO is widening as AI platforms develop their own ways of ranking information, increasingly favouring clean, structured, low-friction content — which is exactly what Hailo provides."
+  },
+  {
+    num: 6, category: "What Hailo Is",
+    question: "What does Hailo do to listings before distributing them to AI platforms?",
+    answers: ["Nothing — it passes listings through exactly as received","It rewrites property descriptions using AI","It structures and enriches listings with additional property and geographical data to optimise them for AI discovery","It converts listings into social media posts"],
+    correct: 2,
+    explanation: "When Hailo receives listings, it doesn't just pass them on. It appends them with additional property-specific and geographical data that makes them richer and more findable. This is the 'optimisation' part of Hailo. The result is that when an AI platform does a search for property matching a buyer's description — 'three-bed semi with a garden near transport links, budget £500k' — the structured Hailo listing is far more likely to surface than an unoptimised one."
+  },
+  {
+    num: 7, category: "What Hailo Is",
+    question: "Will an agent's team need to change how they work after signing up to Hailo?",
+    answers: ["Yes — they need to manually upload listings to a new platform each day","Yes — they need to rewrite all property descriptions in a specific format","No — there are no new systems, no duplicate entry, and no change to existing workflow","Yes — they need to install new software on every computer in the office"],
+    correct: 2,
+    explanation: "One of Hailo's strongest selling points is zero disruption. Negotiators continue exactly as they do today. Hailo connects to the existing listings feed (via CRM integration or web scrape), handles all the enrichment and optimisation itself, and distributes to AI platforms automatically. There is nothing for the team to do day-to-day. This is a key message for valuation conversations too — 'it runs entirely in the background.'"
+  },
+  {
+    num: 8, category: "What Hailo Is",
+    question: "Hailo specifically helps with what type of search, which is different from traditional SEO?",
+    answers: ["Paid advertising on Google","Generative Engine Optimisation — being found inside AI-generated answers","Social media reach on Instagram and Facebook","Email marketing open rates"],
+    correct: 1,
+    explanation: "Traditional SEO focuses on ranking in Google's link-based search results. GEO (Generative Engine Optimisation) is about being cited and surfaced inside AI-generated answers. These are different environments with different rules. AI platforms increasingly prefer clean, structured, low-friction content — not portal websites full of pop-ups, banners and redirects. Hailo is built specifically for GEO, which is why the Homesearch listing pages are structured the way they are."
+  },
+  {
+    num: 9, category: "What Hailo Is",
+    question: "What is the 'before and after' mindset shift that Hailo creates for an estate agent?",
+    answers: ["Before: we have a website. After: we have a Hailo dashboard.","Before: portals are enough. After: listings need to be discoverable in AI search with the agency clearly shown and the route back to us intact.","Before: we use Rightmove. After: we use Hailo instead.","Before: we do SEO. After: we don't need SEO anymore."],
+    correct: 1,
+    explanation: "This before/after framing captures the mindset shift perfectly. The old thinking — 'we're on the portals, that's enough' — is becoming outdated as more buyers start their property search on AI tools. The new reality is that listings need to be discoverable wherever people search, with the agency's details clearly shown, and a clean route back to the agent. Hailo delivers that. This is a useful framing for valuation conversations."
+  },
+  {
+    num: 10, category: "Pricing, Trial & Sign-Up",
+    question: "How long is the current free trial for Hailo?",
+    answers: ["12 months","6 months","3 months","1 month"],
+    correct: 2,
+    explanation: "The current free trial is 3 months completely free. It's worth noting that early adopters who signed up when Hailo launched received longer trials — some received 12 months, others 6 months — so existing customers you speak to may be on different trial lengths. For anyone signing up today, the offer is 3 months free."
+  },
+  {
+    num: 11, category: "Pricing, Trial & Sign-Up",
+    question: "What is the monthly cost of Hailo after the free trial?",
+    answers: ["£250 per branch per month","£80 net per branch per month","£150 per branch per month","£80 per agency regardless of branch count"],
+    correct: 1,
+    explanation: "Hailo costs £80 net per branch per month after the free trial. This price is fixed until 2030 for agents who signed up early — an important point to make in conversations, as it de-risks the decision. For context, Rightmove typically costs around £2,200 per month for sales and lettings. At £80, Hailo isn't positioned as a portal replacement, but as an affordable visibility layer in emerging AI search channels that are growing in importance."
+  },
+  {
+    num: 12, category: "Pricing, Trial & Sign-Up",
+    question: "After the free trial ends, what happens automatically?",
+    answers: ["The agent is automatically charged £80 per month","The agent's listings are removed from Hailo immediately","Nothing — agents are not automatically invoiced and choose whether to continue","The agent is downgraded to a reduced free version"],
+    correct: 2,
+    explanation: "Agents are never automatically invoiced at the end of their trial. This is an important reassurance to give customers during onboarding and check-in calls, as it removes any risk anxiety. The trial simply ends and the agent decides whether to continue. This also means that for existing customers who haven't yet engaged with Hailo, there's a low-pressure reason to have the conversation — 'you're on a free trial, let's make sure you're getting value from it before it ends.'"
+  },
+  {
+    num: 13, category: "Pricing, Trial & Sign-Up",
+    question: "Where does an agent sign up for Hailo?",
+    answers: ["homesearch.co.uk/hailo","agents.homesearch.co.uk/activate-hailo","hailo.co.uk","agents.homesearch.co.uk/product/hailo"],
+    correct: 1,
+    explanation: "The sign-up URL is agents.homesearch.co.uk/activate-hailo. This is the link used in the referral scheme too. The product information page is at agents.homesearch.co.uk/product/hailo, but sign-up happens at the activate-hailo URL. When sharing with customers or in conversations, this is the URL to direct people to — and take it one step further and complete the form on their behalf."
+  },
+  {
+    num: 14, category: "Pricing, Trial & Sign-Up",
+    question: "How quickly does an agent go live on Hailo after signing up?",
+    answers: ["Immediately upon payment","Within 30 days after CRM verification","In days, with visibility building over 1–3 months","It can take up to 6 months to see any results"],
+    correct: 2,
+    explanation: "Hailo gets agents live in days — there is no lengthy setup process. However, it's important to set the right expectations: visibility across search and AI builds over 1–3 months as listings get indexed and signals accumulate. This is not a 'switch on and see results tomorrow' product. The right framing is: 'You'll be live within days, and over the following weeks and months you'll see your presence across AI platforms grow.'"
+  },
+  {
+    num: 15, category: "Pricing, Trial & Sign-Up",
+    question: "What do agents receive as part of their onboarding after signing up for Hailo?",
+    answers: ["A phone call from a Homesearch director","A welcome email setting out what to expect, plus the referral scheme email","A printed brochure in the post","Access to a live training webinar"],
+    correct: 1,
+    explanation: "Every new Hailo sign-up receives a welcome email explaining what to expect — how their listings will be connected, what the timeline looks like, and what happens next. They also receive the referral scheme email with their unique referral link. The specific onboarding path then depends on their CRM: Reapit customers are guided to install the app; direct integration CRM customers are contacted on their behalf; web scrape customers receive a follow-up within a few days confirming their listings have been connected."
+  },
+  {
+    num: 16, category: "Scale & Growth",
+    question: "Approximately how many UK estate agency branches are currently live on Hailo?",
+    answers: ["Around 500","Around 1,500","Around 3,644","Around 10,000"],
+    correct: 2,
+    explanation: "As of mid-June 2026, 3,644 branches are live on Hailo. This is a powerful credibility signal in conversations — it shows the product is established and growing rapidly. Pairing this with the listings figure (274,172 listings being optimised) and the market share figure (approximately 27–29% of all UK listings) gives a compelling picture of scale. The more agents and listings on Hailo, the stronger the network becomes for everyone."
+  },
+  {
+    num: 17, category: "Scale & Growth",
+    question: "Approximately how many listings are currently being optimised through Hailo?",
+    answers: ["Around 50,000","Around 274,172","Around 1 million","Around 100,000"],
+    correct: 1,
+    explanation: "274,172 listings are currently live and being structured, enriched and optimised for AI search through Hailo (as of mid-June 2026). The total UK listings market is approximately 1 million at any given time, meaning Hailo currently represents around 27–29% of all UK listings. The more listings Hailo has, the more authoritative the Home Search platform appears to AI platforms — directly benefiting every agent on it."
+  },
+  {
+    num: 18, category: "Scale & Growth",
+    question: "What percentage of total UK listings does Hailo currently represent?",
+    answers: ["Around 5%","Around 15%","Around 27–29%","Around 50%"],
+    correct: 2,
+    explanation: "With approximately 274,000 listings live out of a total UK market of around 1 million at any given time, Hailo currently represents approximately 27–29% of all UK listings. Hailo already covers more than a quarter of the market. The network effect means this matters for every agent on it: more listings make the Homesearch platform more authoritative to AI platforms, which benefits all agents."
+  },
+  {
+    num: 19, category: "Scale & Growth",
+    question: "Hailo ran a benchmark testing AI visibility across 12 agents. What was the most striking finding?",
+    answers: ["All 12 agents appeared on every AI platform tested","For 8 of 12 agents (67%), Homesearch was their only direct AI presence — their own websites received zero citations","Rightmove dominated all AI search results","ChatGPT refused to show any property listings"],
+    correct: 1,
+    explanation: "This is one of the most powerful proof points available. In a benchmark of 2,160 queries across 12 agents on 6 AI platforms, 8 of the 12 agents (67%) had zero AI presence through their own website. Not one mention in ChatGPT, Perplexity, Gemini, Copilot or Claude. The only AI visibility those agents had was what Homesearch created for them through Hailo. This brings the 'why Hailo matters' argument to life in a very concrete way."
+  },
+  {
+    num: 20, category: "Scale & Growth",
+    question: "In Hailo's benchmark, which AI platform was the dominant channel for listing visibility?",
+    answers: ["ChatGPT","Google Gemini","Perplexity","Copilot"],
+    correct: 2,
+    explanation: "Perplexity was the dominant channel in Hailo's 2,160-query benchmark. Unlike Gemini (which layers over Google) or ChatGPT (which uses Bing's search API), Perplexity has its own independent crawler and search engine. It indexes content on its own terms, and Homesearch's clean, structured listing pages score well there. Perplexity is 'where AI-native property search is happening right now, and the preview of where every AI platform is heading.'"
+  },
+  {
+    num: 21, category: "Scale & Growth",
+    question: "What type of search query produced the most AI citations in Hailo's benchmark?",
+    answers: ["Simple postcode searches like 'properties in SW1'","Agent name searches like 'Savills properties'","Constraint-rich natural language searches like '3-bed semi, garden, garage, near transport, budget £500k'","Portal searches redirected to AI"],
+    correct: 2,
+    explanation: "Constraint-rich, natural language queries produced the most AI citations — exactly the way real buyers use AI to search for property. Buyers on AI platforms don't use portal-style filters, they describe what they want conversationally. Hailo structures listings specifically to answer these complex queries, which is why they surface when unoptimised competitor listings don't."
+  },
+  {
+    num: 22, category: "The Referral Scheme",
+    question: "How many free months does an agent earn for their first successful Hailo referral?",
+    answers: ["1 month free","2 months free","3 months free","6 months free"],
+    correct: 2,
+    explanation: "The first successful referral earns 3 months free added to the agent's free trial, worth £240. The scheme is cumulative: 2 referrals = 6 months total (£480), 3 referrals = 9 months total (£720). And for 4 referrals, the agent earns a Homesearch Lightsaber — yes, really. The referral mechanism: share your unique link → they join Hailo → you earn free months. It's worth mentioning the referral scheme whenever an agent seems enthusiastic about Hailo on a call."
+  },
+  {
+    num: 23, category: "The Referral Scheme",
+    question: "What is the value of 3 successful referrals to the referring agent?",
+    answers: ["£80","£240","£480","£720"],
+    correct: 3,
+    explanation: "Three successful referrals adds 9 months free to the agent's trial, worth £720 (9 × £80). The scheme is: 1 referral = 3 months (£240), 2 referrals = 6 months (£480), 3 referrals = 9 months (£720). Each referral adds 3 months, accumulating on top of the existing free trial period. Worth surfacing with customers who are positive about Hailo and have industry connections."
+  },
+  {
+    num: 24, category: "The Referral Scheme",
+    question: "What does an agent earn for referring 4 agents to Hailo?",
+    answers: ["A £500 cash reward","12 months free subscription","A Homesearch Lightsaber","A free upgrade to Homesearch Pro"],
+    correct: 2,
+    explanation: "Four successful referrals earns the agent a Homesearch Lightsaber — Homesearch's way of saying 'you've earned the right to defend the future of property search against the portal empire properly.' It's memorable and reinforces the bigger narrative: Hailo is a network product. The more agents on it, the stronger it becomes for everyone."
+  },
+  {
+    num: 25, category: "Hailo in the Homesearch Suite",
+    question: "Where does Hailo sit within the Homesearch product suite?",
+    answers: ["It is a standalone product with no connection to other Homesearch tools","It is the visibility layer — making listings discoverable in AI search — with ReContact, Insights and Pro building on top","It replaces all other Homesearch products","It is only available to customers who also have Homesearch Pro"],
+    correct: 1,
+    explanation: "Hailo is the visibility layer within Homesearch. It handles discoverability — making sure listings and agency details are found in AI search. If agents then want to turn that visibility into more immediate conversations, they look at ReContact. For stronger valuation conversations, there's Insights. For a more consistent prospecting engine, there's Pro. This suite framing is important for cross-selling: if you're speaking to an agent on ReContact or Insights, Hailo is a natural addition."
+  }
+];
+
+// ── STATE ──────────────────────────────────────────────────────
+let current = 0;
+let score   = 0;
+let answered = false;
+let shuffled = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── SCREENS ────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function showStart() { showScreen('start'); }
+
+function startQuiz() {
+  shuffled = shuffle(QUESTIONS);
+  current = 0; score = 0; answered = false;
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function retakeQuiz() { startQuiz(); }
+
+// ── RENDER QUESTION ────────────────────────────────────────────
+function renderQuestion() {
+  answered = false;
+  const q = shuffled[current];
+
+  document.getElementById('q-number').textContent   = current + 1;
+  document.getElementById('q-category').textContent = q.category;
+  document.getElementById('q-text').textContent     = q.question;
+  document.getElementById('wrong-bar').classList.remove('show');
+
+  // Progress
+  const pct = Math.round((current / shuffled.length) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `Question ${current + 1} of ${shuffled.length}`;
+  document.getElementById('progress-score').textContent = `Score: ${score}`;
+
+  // Render answers
+  const container = document.getElementById('answers');
+  container.innerHTML = '';
+  const letters = ['A','B','C','D'];
+
+  q.answers.forEach((text, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.innerHTML = `
+      <div class="answer-letter">${letters[idx]}</div>
+      <div class="answer-text">${text}</div>
+    `;
+    btn.onclick = () => handleAnswer(idx, btn);
+    container.appendChild(btn);
+  });
+}
+
+// ── HANDLE ANSWER ──────────────────────────────────────────────
+function handleAnswer(selectedIdx, btn) {
+  if (answered) return;
+  const q = shuffled[current];
+
+  if (selectedIdx === q.correct) {
+    // ✓ CORRECT
+    answered = true;
+    score++;
+    btn.classList.add('correct');
+    // dim others
+    document.querySelectorAll('.answer-btn').forEach((b, i) => {
+      if (i !== selectedIdx) b.classList.add('dimmed');
+      b.disabled = true;
+    });
+    // show tip modal
+    showTip(q);
+
+  } else {
+    // ✗ WRONG — shake, show bar, don't lock
+    btn.classList.add('wrong');
+    setTimeout(() => btn.classList.remove('wrong'), 400);
+    btn.disabled = true;
+    document.getElementById('wrong-bar').classList.add('show');
+  }
+}
+
+// ── TIP MODAL ──────────────────────────────────────────────────
+function showTip(q) {
+  document.getElementById('tip-category-label').textContent = q.category;
+  document.getElementById('tip-text').textContent            = q.explanation;
+
+  const isLast = (current === shuffled.length - 1);
+  document.getElementById('tip-next-btn').textContent = isLast ? 'See My Results →' : 'Next Question →';
+
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeTip() {
+  document.getElementById('overlay').classList.remove('show');
+  current++;
+  if (current < shuffled.length) {
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+// ── RESULTS ───────────────────────────────────────────────────
+function showResults() {
+  const total  = shuffled.length;
+  const pct    = Math.round((score / total) * 100);
+  const wrong  = total - score;
+
+  document.getElementById('end-num').textContent      = score;
+  document.getElementById('end-denom').textContent    = `/ ${total}`;
+  document.getElementById('end-pct').textContent      = pct + '%';
+  document.getElementById('stat-correct').textContent = score;
+  document.getElementById('stat-wrong').textContent   = wrong;
+  document.getElementById('stat-pct').textContent     = pct + '%';
+
+  let emoji, title, message;
+  if (pct === 100) {
+    emoji   = '🏆';
+    title   = 'Perfect Score!';
+    message = "Flawless. You know Hailo inside out — now go use it in every conversation you have today.";
+  } else if (pct >= 80) {
+    emoji   = '🎉';
+    title   = 'Strong Result!';
+    message = "You've got the foundation nailed. Review the questions you missed, then try the Intermediate quiz when you're ready.";
+  } else if (pct >= 60) {
+    emoji   = '💪';
+    title   = 'Good Effort!';
+    message = "Solid start. A few gaps to close — go back through the explanations you missed and retake when you're ready.";
+  } else {
+    emoji   = '📚';
+    title   = 'Keep Going!';
+    message = "Hailo is a big topic — this is exactly why we built this quiz. Take another look at the material, then come back and beat this score.";
+  }
+
+  document.getElementById('end-emoji').textContent   = emoji;
+  document.getElementById('end-title').textContent   = title;
+  document.getElementById('end-message').textContent = message;
+
+  showScreen('end');
+}
+</script>
+</body>
+</html>
